@@ -11,3 +11,4 @@ secrets.yaml
 
 # Read-only reference checkouts
 .ref/
+test/vectors.json
