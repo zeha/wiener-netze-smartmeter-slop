@@ -36,6 +36,29 @@ may output an inverted signal; set `inverted: true` on the `rx_pin` (see the
 example config). The S2 Mini logs over its native USB port, so the hardware UART
 is free for the meter.
 
+### Battery voltage divider
+
+The example config measures the battery of the 7000 mAh LiPo:
+
+| Part | Connection |
+|------|------------|
+| R1 = 1 MOhm | battery + terminal -> GPIO3 |
+| R2 = 1 MOhm | GPIO3 -> GND |
+| C = 100 nF (optional) | GPIO3 -> GND, against noise |
+
+GPIO3 is on ADC1, which keeps working while WiFi is on (ADC2 does not). The
+divider halves the cell voltage (4.2 V full -> 2.1 V at the pin), inside the
+range of the 12 dB attenuation. Tap the battery's own + terminal, before any
+regulator. Do not measure the board's 3V3 pin or rail: it is regulated, so it
+reads about 3.3 V until the battery is almost empty and says nothing about the
+charge. Also, never connect a LiPo (up to 4.2 V) straight to the 3V3 pin. Feed
+it through a regulator to 3V3, or into the 5V/VBUS pin and the on-board LDO.
+
+The divider draws about 2 uA continuously (4.2 V / 2 MOhm), negligible against
+7000 mAh. With 1 MOhm resistors the source is high-impedance; the 100 nF
+capacitor gives the ADC a stable charge to sample and makes readings noticeably
+steadier.
+
 ## Configuration
 
 See [config/example_smartmeter.yaml](config/example_smartmeter.yaml) for a complete device.
@@ -106,7 +129,17 @@ is the fallback when no telegram or no WiFi comes. To keep the wake time short:
 - keep the logger at `INFO` or lower once it works,
 - the S2 Mini has a power LED and a USB regulator with quiescent current; for
   long battery life power it from a LiPo through an efficient 3.3 V regulator to
-  the 3V3 pin, and consider removing the power LED.
+  the 3V3 pin, and consider removing the power LED (see the voltage divider
+  above for measuring the battery).
+
+Battery sensors: `Smartmeter battery voltage` (V) is sampled once per wake-up,
+right after boot (`esphome.on_boot` at priority 500, before WiFi starts), as
+the average of 64 ADC readings multiplied by 2 for the divider.
+`Smartmeter battery level` (%) maps that voltage with a rough LiPo curve:
+>= 4.15 V 100 %, 4.05 V 85 %, 3.95 V 70 %, 3.85 V 55 %, 3.75 V 40 %,
+3.65 V 25 %, 3.55 V 12 %, 3.45 V 5 %, below 0 %. Under WiFi transmit load the
+cell sags a little, and the ESP32 ADC is accurate to only a few percent, so
+treat both values as estimates, good enough as a reminder to recharge.
 
 The energy sensors are `total_increasing`, so gaps while the board sleeps do not
 disturb Home Assistant's energy dashboard. To flash a sleeping board over the
