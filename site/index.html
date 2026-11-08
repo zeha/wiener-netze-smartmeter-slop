@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Reading a Wiener Netze M1 smart meter locally with a battery-powered ESP32 and feeding live consumption data into Home Assistant — no cloud, no power outlet.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Owncore">
+<meta property="og:title" content="Wiener Netze Smart Meter → Home Assistant">
+<meta property="og:description" content="Reading a Wiener Netze M1 smart meter locally with a battery-powered ESP32 and feeding live consumption data into Home Assistant — no cloud, no power outlet.">
+<meta property="og:url" content="https://share.zeha.owncore.ai/wiener-netze-smartmeter/">
+<meta property="og:image" content="https://share.zeha.owncore.ai/wiener-netze-smartmeter/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Overview: smart meter read locally by a battery-powered ESP32 into Home Assistant">
+<meta name="twitter:card" content="summary_large_image">
+<title>Wiener Netze Smart Meter → Home Assistant</title>
+<style>
+  :root { --ink:#1c1b18; --paper:#faf9f6; --muted:#6b675f; --line:#e4e0d6; --accent:#0a7d4f; --accent-soft:#e7f3ec; --code-bg:#f0eee8; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.55; }
+  .wrap { max-width:900px; margin:0 auto; padding:48px 24px 8px; }
+  h1 { font-size:34px; line-height:1.15; letter-spacing:-0.02em; margin:0 0 10px; }
+  h2 { font-size:22px; letter-spacing:-0.01em; margin:44px 0 12px; padding-top:8px; }
+  p.lede { font-size:18px; color:var(--muted); margin:0 0 8px; }
+  .tag { display:inline-block; font-size:12.5px; font-weight:600; color:var(--accent); background:var(--accent-soft); border:1px solid #cde5d8; border-radius:999px; padding:3px 12px; margin-bottom:14px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:680px){ .grid { grid-template-columns:1fr; } h1 { font-size:28px; } }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .card h3 { margin:0 0 6px; font-size:15px; }
+  .card p { margin:0; font-size:14px; color:var(--muted); }
+  code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  code { background:var(--code-bg); padding:1.5px 6px; border-radius:5px; font-size:13px; }
+  pre { background:#22211e; color:#ece9e2; border-radius:12px; padding:16px 18px; overflow-x:auto; font-size:13px; line-height:1.5; }
+  pre code { background:none; padding:0; color:inherit; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin:12px 0; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
+  ul { padding-left:20px; margin:8px 0; }
+  li { margin:4px 0; font-size:15px; }
+  .ok { color:var(--accent); font-weight:700; }
+  .wait { color:#a06a00; font-weight:700; }
+  .diagram { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px; margin:14px 0 0; }
+  .note { border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 10px 10px 0; padding:10px 16px; font-size:14px; margin:14px 0; }
+  footer.page { margin-top:48px; padding:18px 0 8px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="tag">Home project · In development</span>
+  <h1>Wiener Netze Smart Meter → Home Assistant</h1>
+  <p class="lede">Reading an M1 smart meter (Iskraemeko) locally with a battery-powered ESP32 —
+  no cloud, no gateway, no power outlet at the meter. Live consumption data lands in Home Assistant over your own Wi-Fi.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 820 130" width="100%" role="img" aria-label="Architecture: smart meter, infrared, ESP32 board with battery, Wi-Fi, Home Assistant">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#0a7d4f"/></marker>
+      </defs>
+      <g font-family="Manrope,system-ui,sans-serif" font-size="13">
+        <rect x="10" y="30" width="170" height="70" rx="10" fill="#f0eee8" stroke="#d8d3c4"/>
+        <text x="95" y="60" text-anchor="middle" font-weight="700" fill="#1c1b18">M1 smart meter</text>
+        <text x="95" y="80" text-anchor="middle" fill="#6b675f">Iskraemeko · IR window</text>
+        <line x1="180" y1="65" x2="288" y2="65" stroke="#0a7d4f" stroke-width="1.6" marker-end="url(#arr)"/>
+        <text x="234" y="52" text-anchor="middle" fill="#0a7d4f" font-size="12">IR · ~1 s push</text>
+        <rect x="294" y="30" width="150" height="70" rx="10" fill="#f0eee8" stroke="#d8d3c4"/>
+        <text x="369" y="60" text-anchor="middle" font-weight="700" fill="#1c1b18">IR read head</text>
+        <text x="369" y="80" text-anchor="middle" fill="#6b675f">passive · 3.3 V</text>
+        <line x1="444" y1="65" x2="528" y2="65" stroke="#0a7d4f" stroke-width="1.6" marker-end="url(#arr)"/>
+        <text x="486" y="52" text-anchor="middle" fill="#0a7d4f" font-size="12">UART 9600</text>
+        <rect x="534" y="30" width="170" height="70" rx="10" fill="#e7f3ec" stroke="#bfe0cf"/>
+        <text x="619" y="55" text-anchor="middle" font-weight="700" fill="#1c1b18">Wemos S2 Mini</text>
+        <text x="619" y="73" text-anchor="middle" fill="#6b675f">ESP32-S2 · ESPHome</text>
+        <text x="619" y="90" text-anchor="middle" fill="#6b675f">LiPo 7000 mAh</text>
+        <line x1="704" y1="65" x2="778" y2="65" stroke="#0a7d4f" stroke-width="1.6" marker-end="url(#arr)"/>
+        <text x="741" y="52" text-anchor="middle" fill="#0a7d4f" font-size="12">Wi-Fi</text>
+        <rect x="784" y="40" width="30" height="50" rx="6" fill="#e7f3ec" stroke="#bfe0cf"/>
+        <text x="799" y="71" text-anchor="middle" font-size="15" fill="#0a7d4f">HA</text>
+      </g>
+    </svg>
+  </div>
+
+  <h2>How it works</h2>
+  <ul>
+    <li><strong>The meter does the pushing.</strong> M1 meters send a complete consumption telegram through their infrared customer interface roughly every second — no query, no wired bus, no installer access needed.</li>
+    <li><strong>A passive IR head</strong> (a small photodiode module, 3.3 V) sits in front of the meter's IR window, about 5–10 cm away, and turns the light into a UART signal (9600 baud, 8N1).</li>
+    <li><strong>A Wemos S2 Mini (ESP32-S2)</strong> runs a custom <code>wiener_netze</code> ESPHome component: it waits for the 105-byte frame, verifies the CRC-16/X-25, decrypts the payload with the meter's security key, and publishes the values to Home Assistant over the native ESPHome API.</li>
+    <li><strong>Battery + deep sleep.</strong> There is no power outlet at the meter. The board wakes every few minutes, reads one telegram, sends it, and sleeps again. A voltage divider on the battery feeds the S2's ADC, so Home Assistant also shows the remaining battery.</li>
+  </ul>
+
+  <h2>The protocol, in one table</h2>
+  <table>
+    <tr><th>Aspect</th><th>Value</th></tr>
+    <tr><td>Interface</td><td>Infrared customer interface (IEC 62056-21, mode E HDLC push)</td></tr>
+    <tr><td>Line rate</td><td>9600 baud, 8N1</td></tr>
+    <tr><td>Frame</td><td>105 bytes: <code>7E A0</code> header + system title + frame counter + 74-byte encrypted payload</td></tr>
+    <tr><td>Integrity</td><td>CRC-16/X-25 over the unencrypted header</td></tr>
+    <tr><td>Encryption</td><td>AES-128 (GCM-CTR stream) — key from the Wiener Netze smart meter portal, stored only on the device</td></tr>
+    <tr><td>Values</td><td>Active/reactive energy (Wh, Wh, varh, varh) and active/reactive power (W, W, var, var) + meter timestamp</td></tr>
+  </table>
+
+  <div class="note"><strong>Privacy by design:</strong> the data path is meter → ESP32 → your network → Home Assistant. Nothing leaves the house, no cloud account, and the portal key (a credential) is written once into the device config — it is not shared anywhere.</div>
+
+  <h2>What you get in Home Assistant</h2>
+  <div class="grid">
+    <div class="card"><h3>Energy</h3><p>Import / export (kWh) and reactive import / export (kvarh) — usable for dashboards and cost tracking.</p></div>
+    <div class="card"><h3>Power</h3><p>Live active and reactive power, import and export (W, var).</p></div>
+    <div class="card"><h3>Device health</h3><p>Decoded-telegram counter, meter timestamp, Wi-Fi and battery status — you know when the read head needs attention.</p></div>
+    <div class="card"><h3>Battery monitoring</h3><p>Battery voltage on the S2's ADC via a 1 MΩ divider; state-of-charge estimate as a battery sensor.</p></div>
+  </div>
+
+  <h2>Hardware &amp; wiring</h2>
+  <table>
+    <tr><th>Part</th><th>Wiring</th></tr>
+    <tr><td>Passive IR read head (3.3 V, e.g. TSOP-type serial module or bare photodiode + amp)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA → GPIO21</code> (receive only; some heads need the signal inverted)</td></tr>
+    <tr><td>LiPo battery, 7000 mAh (3.7 V cell)</td><td>to the board's <code>3V3</code> pin (not the 5 V/USB pin — the regulator has no charger and feeding 3.3 V directly is ~25 % more efficient)</td></tr>
+    <tr><td>Voltage divider (2 × 1 MΩ, optional 100 nF to GND)</td><td>battery + → R1 → <code>GPIO3</code> (ADC1) → R2 → GND; the ESPHome config maps the reading back to battery volts</td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">The board is powered from the battery's 3.3 V rail; deep sleep draws only tens of µA, so the battery — not the board — sets the runtime.</p>
+
+  <h2>Battery life</h2>
+  <p>Per wake-up (boot + Wi-Fi ≈ 2 s, one telegram ≈ 1.5 s, publish ≈ 0.5 s) the board uses roughly 0.1–0.23 mAh. The meter pushes ~1×/second, so every wake-up always has a telegram ready — the wake interval is the only knob.</p>
+  <table>
+    <tr><th>Wake cycle</th><th>Typical runtime</th><th>Conservative</th></tr>
+    <tr><td>1 min</td><td>~38 days</td><td>~17 days</td></tr>
+    <tr><td><strong>5 min (default)</strong></td><td><strong>~6 months</strong></td><td><strong>~3 months</strong></td></tr>
+    <tr><td>10 min</td><td>~12 months</td><td>~5 months</td></tr>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">Estimate, to be confirmed by measurement. The divider lets Home Assistant track how fast the real battery drains.</p>
+
+  <h2>Status</h2>
+  <table>
+    <tr><th>Step</th><th>State</th></tr>
+    <tr><td>Research (interface, protocol, reference firmware)</td><td class="ok">done</td></tr>
+    <tr><td><code>wiener_netze</code> ESPHome component + device config</td><td class="ok">built &amp; compiled (735 KB, 17.5 % of 4 MB flash, 0 warnings)</td></tr>
+    <tr><td>Bench test at the meter (IR alignment, key, real telegram capture)</td><td class="wait">next</td></tr>
+    <tr><td>Repo on GitHub, HA integration via <code>external_components</code></td><td class="wait">after bench test</td></tr>
+    <tr><td>Long-term battery measurement</td><td class="wait">running in the wild</td></tr>
+  </table>
+
+  <h2>Building it yourself</h2>
+  <p>Add the component from the GitHub repo to your ESPHome config (repo goes public after the bench test):</p>
+  <pre><code>external_components:
+  - source: github://zeha/wiener-netze-smartmeter@main
+    components: [wiener_netze]
+
+wiener_netze:
+  uart_id: meter_uart
+  security_key: "&lt;32-hex key from the Wiener Netze portal&gt;"
+  read_timeout: 10s</code></pre>
+  <p>Placeholders you must fill in: Wi-Fi credentials, the ESPHome API encryption key (<code>openssl rand -base64 32</code>), and the meter security key from the portal. The example config ships with deep-sleep wake-up every 5 minutes and the battery voltage sensor.</p>
+
+  <footer class="page">
+    Firmware logic derived from <a href="https://github.com/aldadic/esp-smartmeter-reader">aldadic/esp-smartmeter-reader</a> (GPL-3.0),
+    protocol layout cross-checked with <a href="https://github.com/DomiStyle/esphome-dlms-meter">DomiStyle/esphome-dlms-meter</a>.
+    Component, config and this page are GPL-3.0.
+  </footer>
+
+  <!-- owncore-credit -->
+  <footer data-owncore-credit style="font-family:Manrope,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:12.5px;line-height:1.4;text-align:center;padding:20px 16px 24px;opacity:.6;color:inherit">
+    <a href="https://www.owncore.ai" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 64 64" aria-hidden="true" style="flex:none"><g transform="translate(5.12 5.12) scale(0.84)" fill="currentColor"><ellipse cx="52.82" cy="45.63" rx="6.18" ry="6.77"/><ellipse cx="34.83" cy="50.19" rx="7.57" ry="7.57"/><ellipse cx="16.99" cy="45.35" rx="6.10" ry="6.73"/><ellipse cx="7.88" cy="33.43" rx="2.88" ry="4.84"/><ellipse cx="12.12" cy="20.00" rx="4.02" ry="4.92"/><ellipse cx="24.14" cy="12.82" rx="4.96" ry="5.12"/><ellipse cx="38.94" cy="11.39" rx="5.13" ry="5.14"/><ellipse cx="52.82" cy="15.76" rx="4.60" ry="5.05"/></g></svg><span>Created with Owncore · Private AI on your own server</span></a>
+  </footer>
+</div>
+</body>
+</html>
