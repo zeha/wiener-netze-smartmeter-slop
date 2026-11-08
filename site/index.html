@@ -115,10 +115,10 @@
   <table>
     <tr><th>Part</th><th>Wiring</th></tr>
     <tr><td>Passive IR read head (3.3 V, e.g. TSOP-type serial module or bare photodiode + amp)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA → GPIO21</code> (receive only; some heads need the signal inverted)</td></tr>
-    <tr><td>LiPo battery, 7000 mAh (3.7 V cell)</td><td>to the board's <code>3V3</code> pin (not the 5 V/USB pin — the regulator has no charger and feeding 3.3 V directly is ~25 % more efficient)</td></tr>
+    <tr><td>LiPo battery, 7000 mAh (3.7 V cell)</td><td>to the board's <code>5V/VBUS</code> pin, through the on-board regulator (a charged LiPo reaches 4.2 V and must not be applied to the 3V3 pin); the board has no battery charger — swap the pack when flat</td></tr>
     <tr><td>Voltage divider (2 × 1 MΩ, optional 100 nF to GND)</td><td>battery + → R1 → <code>GPIO3</code> (ADC1) → R2 → GND; the ESPHome config maps the reading back to battery volts</td></tr>
   </table>
-  <p style="font-size:14px;color:var(--muted)">The board is powered from the battery's 3.3 V rail; deep sleep draws only tens of µA, so the battery — not the board — sets the runtime.</p>
+  <p style="font-size:14px;color:var(--muted)">The board is powered from the battery via the 5V/VBUS pin and the on-board regulator. In deep sleep the board itself draws only tens of µA — what matters overnight is the IR head's idle current (it stays on 3V3): a bare-phototransistor type costs a few µA, an amplifier module a few mA, so pick accordingly or switch the head's VCC.</p>
 
   <h2>Battery life</h2>
   <p>Per wake-up (boot + Wi-Fi ≈ 2 s, one telegram ≈ 1.5 s, publish ≈ 0.5 s) the board uses roughly 0.1–0.23 mAh. The meter pushes ~1×/second, so every wake-up always has a telegram ready — the wake interval is the only knob.</p>
