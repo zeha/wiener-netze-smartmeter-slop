@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# ESPHome build artifacts and local secrets
+.esphome/
+config/.esphome/
+config/secrets.yaml
+secrets.yaml
+
+# Read-only reference checkouts
+.ref/

@@ -1,0 +1,114 @@
+# Wiener Netze M1 smart meter (Iskraemeko) -> Home Assistant
+# Board: Wemos S2 Mini (ESP32-S2), battery powered, deep sleep between readings.
+#
+# Placeholders to replace before flashing (search for "CHANGE ME"):
+#   wifi ssid/password, api encryption key, wiener_netze security_key.
+# Better: move them to secrets.yaml and use !secret.
+
+esphome:
+  name: smartmeter-wiener-netze
+  friendly_name: Smartmeter Wiener Netze
+
+external_components:
+  # Local development: the component lives in ../components of this repo.
+  - source:
+      type: local
+      path: ../components
+    components: [wiener_netze]
+  # In Home Assistant (once the repo is on GitHub) use instead:
+  # - source: github://zeha/wiener-netze-smartmeter@main
+  #   components: [wiener_netze]
+
+esp32:
+  board: lolin_s2_mini  # Wemos/LOLIN S2 Mini (ESPHome has no "wemos_s2_mini" id)
+  variant: esp32s2
+  framework:
+    type: esp-idf
+
+logger:
+  # The S2 Mini logs over native USB, the hardware UARTs stay free for the meter.
+  level: DEBUG
+
+wifi:
+  ssid: "YOUR_WIFI_SSID"          # CHANGE ME
+  password: "YOUR_WIFI_PASSWORD"  # CHANGE ME
+  # Recommended for battery use: a static IP skips DHCP and shortens every wake-up.
+  # manual_ip:
+  #   static_ip: 192.168.1.50
+  #   gateway: 192.168.1.1
+  #   subnet: 255.255.255.0
+  #   dns1: 192.168.1.1
+  fast_connect: true
+
+api:
+  encryption:
+    # CHANGE ME: placeholder (decodes to "CHANGE_ME..."); generate your own with `openssl rand -base64 32`.
+    key: "Q0hBTkdFX01FX0NIQU5HRV9NRV9DSEFOR0VfTUVfISE="
+
+ota:
+  - platform: esphome
+
+uart:
+  id: meter_uart
+  rx_pin: GPIO21   # data line of the passive IR read head; receive only, no tx_pin
+  baud_rate: 9600  # 8N1
+  # Some IR heads output an inverted signal; if no frame ever arrives, try:
+  # rx_pin:
+  #   number: GPIO21
+  #   inverted: true
+
+wiener_netze:
+  uart_id: meter_uart
+  # CHANGE ME: the 32-hex-character key from the Wiener Netze Smart Meter portal
+  # (Kundenschnittstelle). This value is a placeholder and will not decrypt anything.
+  security_key: "0123456789abcdef0123456789abcdef"
+  read_timeout: 10s
+  on_telegram:
+    # One telegram per wake-up is enough: wait until Home Assistant is connected
+    # so the values are delivered, then go back to sleep.
+    - wait_until:
+        condition: api.connected
+        timeout: 20s
+    - delay: 1s
+    - deep_sleep.enter: deep_sleep_1
+
+deep_sleep:
+  id: deep_sleep_1
+  # Fallback if no telegram arrives (IR head misaligned, wrong key, no WiFi).
+  run_duration: 40s
+  # The meter pushes about once per second; 1min..10min are sensible, longer saves battery.
+  sleep_duration: 5min
+
+sensor:
+  - platform: wiener_netze
+    type: energy_active_plus
+    name: "Energy import"
+  - platform: wiener_netze
+    type: energy_active_minus
+    name: "Energy export"
+  - platform: wiener_netze
+    type: energy_reactive_plus
+    name: "Reactive energy import"
+  - platform: wiener_netze
+    type: energy_reactive_minus
+    name: "Reactive energy export"
+  - platform: wiener_netze
+    type: power_active_plus
+    name: "Power import"
+  - platform: wiener_netze
+    type: power_active_minus
+    name: "Power export"
+  - platform: wiener_netze
+    type: power_reactive_plus
+    name: "Reactive power import"
+  - platform: wiener_netze
+    type: power_reactive_minus
+    name: "Reactive power export"
+  - platform: wiener_netze
+    type: telegram_count
+    name: "Telegrams decoded"
+
+text_sensor:
+  - platform: wiener_netze
+    type: timestamp
+    name: "Meter time"
