@@ -16,6 +16,10 @@ python3 -m venv .venv
 .venv/bin/python test/decrypt_test.py                      # Python mirror of the frame logic
 ```
 
+A venv that was moved or copied keeps the old path in its script shebangs, so
+`.venv/bin/esphome` fails with "required file not found"; use
+`.venv/bin/python -m esphome ...` or recreate the venv.
+
 The first compile downloads ESP-IDF and the toolchain (several GB, many minutes);
 later builds are incremental. Verified with ESPHome 2026.10.2, ESP-IDF 5.5.6.
 Flashing: `.venv/bin/esphome run config/example_smartmeter.yaml` with the board on USB.
