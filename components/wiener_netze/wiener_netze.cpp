@@ -52,7 +52,6 @@ void WienerNetze::dump_config() {
                 "  Frame length: %u bytes\n"
                 "  Read timeout: %" PRIu32 " ms",
                 (unsigned) FRAME_LENGTH, this->read_timeout_);
-  this->check_uart_settings(9600, 1, uart::UART_CONFIG_PARITY_NONE, 8);
 }
 
 void WienerNetze::loop() {
