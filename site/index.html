@@ -134,16 +134,16 @@
   <table>
     <tr><th>Step</th><th>State</th></tr>
     <tr><td>Research (interface, protocol, reference firmware)</td><td class="ok">done</td></tr>
-    <tr><td><code>wiener_netze</code> ESPHome component + device config</td><td class="ok">built &amp; compiled (735 KB, 17.5 % of 4 MB flash, 0 warnings)</td></tr>
+    <tr><td><code>wiener_netze</code> ESPHome component + device config (incl. battery sensors)</td><td class="ok">built &amp; compiled (744 KB, 18.3 % of 4 MB flash, 0 warnings)</td></tr>
     <tr><td>Bench test at the meter (IR alignment, key, real telegram capture)</td><td class="wait">next</td></tr>
-    <tr><td>Repo on GitHub, HA integration via <code>external_components</code></td><td class="wait">after bench test</td></tr>
+    <tr><td>Repo on GitHub (<a href="https://github.com/zeha/wiener-netze-smartmeter-slop">zeha/wiener-netze-smartmeter-slop</a>), HA integration via <code>external_components</code></td><td class="ok">repo public - wire up and flash</td></tr>
     <tr><td>Long-term battery measurement</td><td class="wait">running in the wild</td></tr>
   </table>
 
   <h2>Building it yourself</h2>
-  <p>Add the component from the GitHub repo to your ESPHome config (repo goes public after the bench test):</p>
+  <p>Add the component from the <a href="https://github.com/zeha/wiener-netze-smartmeter-slop">GitHub repo</a> to your ESPHome config:</p>
   <pre><code>external_components:
-  - source: github://zeha/wiener-netze-smartmeter@main
+  - source: github://zeha/wiener-netze-smartmeter-slop@main
     components: [wiener_netze]
 
 wiener_netze:
