@@ -146,11 +146,19 @@
   - source: github://zeha/wiener-netze-smartmeter-slop@main
     components: [wiener_netze]
 
+# The IR head's data line (see wiring above), receive only, 8N1.
+# The component requires this uart block; if no frame ever arrives,
+# set inverted: true on the rx_pin.
+uart:
+  id: meter_uart
+  rx_pin: GPIO21
+  baud_rate: 9600
+
 wiener_netze:
   uart_id: meter_uart
   security_key: "&lt;32-hex key from the Wiener Netze portal&gt;"
   read_timeout: 10s</code></pre>
-  <p>Placeholders you must fill in: Wi-Fi credentials, the ESPHome API encryption key (<code>openssl rand -base64 32</code>), and the meter security key from the portal. The example config ships with deep-sleep wake-up every 5 minutes and the battery voltage sensor.</p>
+  <p>The <code>uart:</code> block is mandatory: it is how the component receives the IR head's data line (9600 baud, 8N1, no TX). Placeholders you must fill in: Wi-Fi credentials, the ESPHome API encryption key (<code>openssl rand -base64 32</code>), and the meter security key from the portal. The full example config in the repo adds deep-sleep wake-up every 5 minutes and the battery voltage sensor.</p>
 
   <footer class="page">
     Firmware logic derived from <a href="https://github.com/aldadic/esp-smartmeter-reader">aldadic/esp-smartmeter-reader</a> (GPL-3.0),
