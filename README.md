@@ -65,7 +65,7 @@ See [config/example_smartmeter.yaml](config/example_smartmeter.yaml) for a compl
 
 ```yaml
 external_components:
-  - source: github://zeha/wiener-netze-smartmeter@main
+  - source: github://zeha/wiener-netze-smartmeter-slop@main
     components: [wiener_netze]
 
 uart:

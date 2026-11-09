@@ -21,8 +21,8 @@ external_components:
       type: local
       path: ../components
     components: [wiener_netze]
-  # In Home Assistant (once the repo is on GitHub) use instead:
-  # - source: github://zeha/wiener-netze-smartmeter@main
+  # In Home Assistant use instead:
+  # - source: github://zeha/wiener-netze-smartmeter-slop@main
   #   components: [wiener_netze]
 
 esp32:
