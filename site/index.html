@@ -85,7 +85,7 @@
   <h2>How it works</h2>
   <ul>
     <li><strong>The meter does the pushing.</strong> M1 meters send a complete consumption telegram through their infrared customer interface roughly every second — no query, no wired bus, no installer access needed.</li>
-    <li><strong>A passive IR head</strong> (a small photodiode module, 3.3 V) sits in front of the meter's IR window, about 5–10 cm away, and turns the light into a UART signal (9600 baud, 8N1).</li>
+    <li><strong>An IR read head</strong> (a Hichi IR TTL v1.1, a 3.3 V TTL phototransistor module) sits in front of the meter's IR window, about 5–10 cm away, cable pointing downwards, and turns the light into a UART signal (9600 baud, 8N1).</li>
     <li><strong>A Wemos S2 Mini (ESP32-S2)</strong> runs a custom <code>wiener_netze</code> ESPHome component: it waits for the 105-byte frame, verifies the CRC-16/X-25, decrypts the payload with the meter's security key, and publishes the values to Home Assistant over the native ESPHome API.</li>
     <li><strong>Battery + deep sleep.</strong> There is no power outlet at the meter. The board wakes every few minutes, reads one telegram, sends it, and sleeps again. A voltage divider on the battery feeds the S2's ADC, so Home Assistant also shows the remaining battery.</li>
   </ul>
@@ -114,8 +114,8 @@
   <h2>Hardware &amp; wiring</h2>
   <table>
     <tr><th>Part</th><th>Wiring</th></tr>
-    <tr><td>Passive IR read head (3.3 V, e.g. TSOP-type serial module or bare photodiode + amp)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA → GPIO21</code> (receive only; some heads need the signal inverted)</td></tr>
-    <tr><td>LiPo battery, 7000 mAh (3.7 V cell)</td><td>to the board's <code>5V/VBUS</code> pin, through the on-board regulator (a charged LiPo reaches 4.2 V and must not be applied to the 3V3 pin); the board has no battery charger — swap the pack when flat</td></tr>
+    <tr><td>IR read head — Hichi IR TTL v1.1 (TYP HB0014), 3.3 V TTL output (any 3.3 V IR-TTL head works)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA → GPIO21</code> (receive only; if no frame ever arrives, set <code>inverted: true</code>). Mount it with the cable pointing downwards towards the meter's window; on a transmit/receive head in receive-only mode, cover the transmit (lighter) LED so the meter doesn't treat it as an input attempt</td></tr>
+    <tr><td>LiPo battery — Olimex BATTERY-LIPO7000mAh (3.7 V, 7000 mAh, built-in overcharge and short-circuit protection)</td><td>to the board's <code>5V/VBUS</code> pin, through the on-board regulator (a charged LiPo reaches 4.2 V and must not be applied to the 3V3 pin). Its 2-pin JST-PH plug is not polarity-keyed: match the red wire (pin 1, +) to the socket's + before plugging in. The board has no battery charger — swap the pack when flat</td></tr>
     <tr><td>Voltage divider (2 × 1 MΩ, optional 100 nF to GND)</td><td>battery + → R1 → <code>GPIO3</code> (ADC1) → R2 → GND; the ESPHome config maps the reading back to battery volts</td></tr>
   </table>
   <p style="font-size:14px;color:var(--muted)">The board is powered from the battery via the 5V/VBUS pin and the on-board regulator. In deep sleep the board itself draws only tens of µA — what matters overnight is the IR head's idle current (it stays on 3V3): a bare-phototransistor type costs a few µA, an amplifier module a few mA, so pick accordingly or switch the head's VCC.</p>
