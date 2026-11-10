@@ -12,3 +12,6 @@ secrets.yaml
 # Read-only reference checkouts
 .ref/
 test/vectors.json
+
+# KiCad DRC/ERC reports
+*.rpt
