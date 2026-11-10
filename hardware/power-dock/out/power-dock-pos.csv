@@ -1,18 +1,25 @@
-Ref,Val,Package,PosX,PosY,Rot,Side
-"C1","10uF 16V","C_0603_1608Metric",113.000000,-118.200000,90.000000,top
-"C2","10uF 16V","C_0603_1608Metric",113.000000,-111.000000,90.000000,top
-"D1","red","LED_0603_1608Metric",116.800000,-114.365000,0.000000,top
-"F1","1A PTC","R_0805_2012Metric",110.000000,-123.000000,0.000000,top
-"J1","TYPE-C16PIN","TYPE-C-SMD_HX-TYPE-C-16PIN",109.000000,-104.200000,180.000000,top
-"J2","S2B-PH-K-S-GW","JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal",102.800000,-121.400000,0.000000,top
-"P1","S2-Mini dock","PinHeader_1x06_P2.54mm_Vertical",129.800000,-102.200000,0.000000,top
-"P2","Hichi IR","PinHeader_1x04_P2.54mm_Vertical",129.800000,-118.600000,0.000000,top
-"R1","5.1k","R_0603_1608Metric",110.250000,-110.000000,90.000000,top
-"R2","2.4k","R_0603_1608Metric",102.200000,-114.365000,0.000000,top
-"R3","1k","R_0603_1608Metric",113.500000,-114.365000,0.000000,top
-"R4","10k","R_0603_1608Metric",119.500000,-115.000000,90.000000,top
-"R5","1M","R_0603_1608Metric",124.000000,-105.000000,90.000000,top
-"R6","1M","R_0603_1608Metric",124.000000,-108.200000,90.000000,top
-"R7","5.1k","R_0603_1608Metric",107.250000,-110.000000,90.000000,top
-"U1","TP4056","SOIC-8_3.9x4.9mm_P1.27mm",108.000000,-115.000000,0.000000,top
-"U2","AO3401","SOT-23",122.300000,-115.000000,0.000000,top
+### Footprint positions - created on 2026-11-10T20:07:31 ###
+### Printed by KiCad version 10.0.8
+## Unit = inches, Angle = deg.
+## Side : All
+# Ref     Val            Package                                       PosX       PosY       Rot  Side
+C1        10uF_16V       C_0603_1608Metric                           4.4488    -4.6535   90.0000  top
+C2        10uF_16V       C_0603_1608Metric                           4.4488    -4.3701   90.0000  top
+D1        red            LED_0603_1608Metric                         4.5984    -4.5026    0.0000  top
+F1        1A_PTC         R_0805_2012Metric                           4.3307    -4.8425    0.0000  top
+F2        1A_PTC         R_0805_2012Metric                           4.7638    -4.7795    0.0000  top
+J1        TYPE-C16PIN    TYPE-C-SMD_HX-TYPE-C-16PIN                  4.2913    -4.1024  180.0000  top
+J2        S2B-PH-K-S-GW  JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal     4.0472    -4.7795    0.0000  top
+J3        S2B-PH-K-S-GW  JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal     4.5079    -4.7874    0.0000  top
+P1        S2-Mini_dock   PinHeader_1x06_P2.54mm_Vertical             5.1102    -4.0236    0.0000  top
+P2        Hichi_IR       PinHeader_1x04_P2.54mm_Vertical             5.1102    -4.6693    0.0000  top
+R1        5.1k           R_0603_1608Metric                           4.3406    -4.3307   90.0000  top
+R2        2.4k           R_0603_1608Metric                           4.0236    -4.5026    0.0000  top
+R3        1k             R_0603_1608Metric                           4.4685    -4.5026    0.0000  top
+R4        10k            R_0603_1608Metric                           4.7047    -4.5276   90.0000  top
+R5        1M             R_0603_1608Metric                           4.8819    -4.1339   90.0000  top
+R6        1M             R_0603_1608Metric                           4.8819    -4.2598   90.0000  top
+R7        5.1k           R_0603_1608Metric                           4.2224    -4.3307   90.0000  top
+U1        TP4056         SOIC-8_3.9x4.9mm_P1.27mm                    4.2520    -4.5276    0.0000  top
+U2        AO3401         SOT-23                                      4.8150    -4.5276    0.0000  top
+## End

@@ -19,6 +19,12 @@ The WEMOS S2-Mini is not on the board; it is wired to P1. Design brief: `SPEC.md
   and D1). The spec's orientation would leave the LED reverse-biased.
 - J2 sits at the bottom edge with the cable exiting downward. On the top side
   of the board this puts pin 1 (+) on the **left**, not the right.
+- **Optional second battery (J3/F2, added 2026-11-10):** a second identical
+  JST-PH socket next to J2 (silkscreen "BATT2") with its own 1 A PTC (F2),
+  paralleling a second Olimex 7000 mAh pack for ~14 Ah / double runtime.
+  Charging stays 500 mA total, so two packs take twice as long to full.
+  J3 and F2 may be left unpopulated (mark them DNP in KiCad so DRC ignores
+  the pads); the board then works as the single-battery dock.
 - U1 uses the plain SOIC-8 footprint the spec lists, so the TP4056 exposed pad
   is not soldered. That is fine at 500 mA.
 - Board is 28 mm tall, not 26 mm, so P1 and P2 fit stacked on the right edge.
@@ -36,6 +42,10 @@ JLC THT assembly or hand-solder them.
 
 - **Battery J2:** Olimex pack red wire = + = pin 1 (marked on silkscreen).
   The plug is unmarked, so check polarity with a meter before plugging in.
+- **Battery J3 (optional):** same pack type, wired the same way (red = + =
+  pin 1, "BATT2" + polarity marks on silkscreen). Leave the socket and the
+  F2 PTC unpopulated for the single-battery dock; populate both to run two
+  packs in parallel (~14 Ah).
 - **P1 to S2-Mini jumpers:** P1.1 -> 5V/VBUS, P1.2 -> GND, P1.3 -> IO3,
   P1.4 -> 3V3, P1.5 -> IO5, P1.6 -> IO21.
 - **P2 Hichi IR head:** 1 = switched 3V3, 2 = GND, 3 = Hichi TX, 4 = not connected.

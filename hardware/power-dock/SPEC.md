@@ -21,7 +21,9 @@ Vault context (read for background, not needed to build):
 | U2  | 1   | AO3401 | TWGMC | C727156 | SOT-23 (1=G 2=S 3=D) | P-MOS gate for IR head power |
 | J1  | 1   | TYPE-C16PIN | SHOU HAN | C393939 | SMD USB-C (JLC footprint) | USB input |
 | J2  | 1   | S2B-PH-K-S-GW | JST | C157932 | JST-PH 2.0 mm, right-angle | Battery input, pin 1 = + |
+| J3  | 1   | S2B-PH-K-S-GW | JST | C157932 | JST-PH 2.0 mm, right-angle | Optional second battery, pin 1 = + (parallel) |
 | F1  | 1   | SMD0805-100C-6V | BNstar | C22472456 | 0805 | PTC resettable fuse 1 A on BAT+ |
+| F2  | 1   | SMD0805-100C-6V | BNstar | C22472456 | 0805 | PTC resettable fuse 1 A on BAT2RAW (optional) |
 | R1  | 1   | RC0603JR-075K1L | YAGEO | C14677 | 0603 | 5.1 k USB-C CC pulldown (UFP Rd) |
 | R2  | 1   | RC0603JR-072K4L | YAGEO | C127450 | 0603 | 2.4 k RPROG = 500 mA charge current |
 | R3  | 1   | RC0603JR-071KL | YAGEO | C14676 | 0603 | 1 k charge-LED current |
@@ -34,7 +36,7 @@ Vault context (read for background, not needed to build):
 | P1  | 1   | 2.54-1*6 | ZHOURI | C5156615 | 1x6 2.54 mm THT | dock header to S2-Mini |
 | P2  | 1   | 2.54-1*4 | ZHOURI | C5116483 | 1x4 2.54 mm THT | Hichi IR head connector |
 
-17 footprint placements, 16 unique parts.
+19 footprint placements, 16 unique parts (J3 uses J2's part, F2 uses F1's part).
 
 ## Net list (complete)
 
@@ -46,8 +48,10 @@ Vault context (read for background, not needed to build):
   TP4056 pin 8 (CE, must be high to enable charging, datasheet section 11).
 - **CC** — USB-C pad A9B4 (CC1+CC2 merged in the JLC footprint) to R1 to GND.
 - **BAT+RAW** — J2 pin 1 to F1 (PTC).
-- **BAT+** — F1 other end, C1, TP4056 pin 5 (BAT), R5 (divider top), P1 pin 1
-  (VBUS out to S2-Mini 5V/VBUS pin).
+- **BAT2RAW** — J3 pin 1 to F2 (PTC, 1 A). Present only if J3/F2 are
+  populated; with J3 empty the net carries nothing.
+- **BAT+** — F1 other end, F2 other end, C1, TP4056 pin 5 (BAT), R5 (divider
+  top), P1 pin 1 (VBUS out to S2-Mini 5V/VBUS pin).
 - **BATMID** — R5/R6 junction, P1 pin 3.
 - **CHRG_LED** — TP4056 pin 7 (CHRG, open-drain, low while charging) to R3 to
   D1 anode.
@@ -84,6 +88,18 @@ Olimex 7000 mAh pack: 1S 3.7 V, 2-pin JST-PH 2.0 mm, unmarked plug, red wire
 edge). Right-angle orientation so the cable leaves the bottom edge of the
 board. JLC part C157932.
 
+### J3 — optional second battery (same type, in parallel)
+
+J3 is a second, identical JST-PH socket right next to J2 (silkscreen
+"BATT2", +/− marks, own 1 A PTC fuse F2 on BAT2RAW). The second battery is
+the same Olimex 7000 mAh 1S pack; plugging it in parallels the two packs
+(~14 Ah) and doubles the runtime. The TP4056 keeps charging at the same 500 mA
+total, so full-charge time with two packs doubles; the voltage divider and
+ADC readout are unaffected (same BAT+ net). Optional by design: J3 and F2 may
+be left unpopulated — mark the footprints DNP in KiCad so DRC ignores their
+pads — and the board works as the single-battery dock. Same wiring
+convention: red wire = + = pin 1.
+
 ## Headers
 
 - **P1 (1x6, THT, pin 1 marked)**: 1 = VBUS (BAT+), 2 = GND, 3 = BATMID
@@ -102,6 +118,10 @@ P1.6->IO21.
   cable enters from the top). Its shell screw holes and the two 0.6 mm
   np-thru-hole mount holes must keep >= 1 mm from the board edge.
 - J2 JST at the bottom edge, cable exits downward; pin 1 to the right.
+- J3 JST (optional 2nd battery) next to J2, same orientation; its top
+  silkscreen edge is trimmed 0.3 mm shorter than the library footprint to keep
+  >= 0.2 mm from the board edge (hence one DRC warning: J3 footprint differs
+  from its library copy — intentional local modification).
 - P1 at the top right (vertical, 90 deg), P2 at the bottom right (vertical),
   Hichi cable exits to the right/bottom-right.
 - U1 TP4056 mid-left; U2 AO3401 between U1 and P1/P2; passives around U1/U2.
@@ -135,7 +155,8 @@ P1.6->IO21.
 KiCad CLI: `K=/opt/data/cache/kicad/AppDir/usr/bin/kicad-cli`
 
 1. `$K sch erc power-dock.kicad_sch` -> 0 errors (warnings: fix or justify)
-2. `$K pcb drc power-dock.kicad_pcb` -> 0 errors
+2. `$K pcb drc power-dock.kicad_pcb` -> 0 errors (1 expected warning: J3
+   footprint locally modified, see Layout constraints)
 3. Schematic netlist and board netlist agree on every net and every footprint
    (compare `$K sch export netlist` vs `$K pcb export` netlist, or manual diff)
 4. `$K pcb export gerbers`, `drill`, `pos`, `svg` (F.Cu/B.Cu), `pdf` succeed

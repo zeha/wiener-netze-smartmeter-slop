@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "/opt/data/repos/wiener-netze-smartmeter/hardware/power-dock/power-dock.kicad_sch")
-		(date "2026-11-09T22:27:41")
+		(date "2026-11-10T20:06:43")
 		(tool "Eeschema 10.0.8")
 		(sheet
 			(number "1")
@@ -343,6 +343,78 @@
 			)
 		)
 		(comp
+			(ref "F2")
+			(value "1A PTC")
+			(footprint "Resistor_SMD:R_0805_2012Metric")
+			(fields
+				(field
+					(name "LCSC") "C22472456")
+				(field
+					(name "MPN") "SMD0805-100C-6V")
+				(field
+					(name "Manufacturer") "BNstar")
+				(field
+					(name "Footprint") "Resistor_SMD:R_0805_2012Metric")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Device")
+				(part "Polyfuse")
+				(description "Resettable fuse, polymeric positive temperature coefficient")
+			)
+			(property
+				(name "LCSC")
+				(value "C22472456")
+			)
+			(property
+				(name "MPN")
+				(value "SMD0805-100C-6V")
+			)
+			(property
+				(name "Manufacturer")
+				(value "BNstar")
+			)
+			(property
+				(name "Sheetname")
+				(value "power-dock")
+			)
+			(property
+				(name "Sheetfile")
+				(value "power-dock.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "resettable fuse PTC PPTC polyfuse polyswitch")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "*polyfuse* *PTC*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "dd3bb50e-dce0-43cc-801f-03ddae2ba5c6")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
 			(ref "J1")
 			(value "TYPE-C16PIN")
 			(footprint "power-dock:TYPE-C-SMD_HX-TYPE-C-16PIN")
@@ -497,6 +569,78 @@
 				(tstamps "/")
 			)
 			(tstamps "7e42460b-13b4-5aba-b494-65665aed1d22")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J3")
+			(value "S2B-PH-K-S-GW")
+			(footprint "Connector_JST:JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal")
+			(fields
+				(field
+					(name "LCSC") "C157932")
+				(field
+					(name "MPN") "S2B-PH-K-S-GW")
+				(field
+					(name "Manufacturer") "JST")
+				(field
+					(name "Footprint") "Connector_JST:JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description")
+				)
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x02")
+				(description "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "LCSC")
+				(value "C157932")
+			)
+			(property
+				(name "MPN")
+				(value "S2B-PH-K-S-GW")
+			)
+			(property
+				(name "Manufacturer")
+				(value "JST")
+			)
+			(property
+				(name "Sheetname")
+				(value "power-dock")
+			)
+			(property
+				(name "Sheetfile")
+				(value "power-dock.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "fb8e72d9-6d3b-461d-a84a-0a3a4ed15971")
 			(units
 				(unit
 					(name "A")
@@ -1817,6 +1961,11 @@
 				(pintype "passive")
 			)
 			(node
+				(ref "F2")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
 				(ref "P1")
 				(pin "1")
 				(pinfunction "Pin_1_1")
@@ -1852,6 +2001,22 @@
 		)
 		(net
 			(code "3")
+			(name "/BAT2RAW")
+			(class "Default")
+			(node
+				(ref "F2")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "4")
 			(name "/BATMID")
 			(class "Default")
 			(node
@@ -1872,7 +2037,7 @@
 			)
 		)
 		(net
-			(code "4")
+			(code "5")
 			(name "/CC1")
 			(class "Default")
 			(node
@@ -1888,7 +2053,7 @@
 			)
 		)
 		(net
-			(code "5")
+			(code "6")
 			(name "/CC2")
 			(class "Default")
 			(node
@@ -1904,7 +2069,7 @@
 			)
 		)
 		(net
-			(code "6")
+			(code "7")
 			(name "/CHRG")
 			(class "Default")
 			(node
@@ -1920,7 +2085,7 @@
 			)
 		)
 		(net
-			(code "7")
+			(code "8")
 			(name "/CHRG_LED")
 			(class "Default")
 			(node
@@ -1936,7 +2101,7 @@
 			)
 		)
 		(net
-			(code "8")
+			(code "9")
 			(name "/HICH_TX")
 			(class "Default")
 			(node
@@ -1953,7 +2118,7 @@
 			)
 		)
 		(net
-			(code "9")
+			(code "10")
 			(name "/IR_EN")
 			(class "Default")
 			(node
@@ -1975,7 +2140,7 @@
 			)
 		)
 		(net
-			(code "10")
+			(code "11")
 			(name "/IR_PWR")
 			(class "Default")
 			(node
@@ -1992,7 +2157,7 @@
 			)
 		)
 		(net
-			(code "11")
+			(code "12")
 			(name "/PROG")
 			(class "Default")
 			(node
@@ -2008,7 +2173,7 @@
 			)
 		)
 		(net
-			(code "12")
+			(code "13")
 			(name "/VBUS")
 			(class "Default")
 			(node
@@ -2042,7 +2207,7 @@
 			)
 		)
 		(net
-			(code "13")
+			(code "14")
 			(name "/VCC_3V3")
 			(class "Default")
 			(node
@@ -2070,7 +2235,7 @@
 			)
 		)
 		(net
-			(code "14")
+			(code "15")
 			(name "GND")
 			(class "Default")
 			(node
@@ -2103,6 +2268,12 @@
 			)
 			(node
 				(ref "J2")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J3")
 				(pin "2")
 				(pinfunction "Pin_2_2")
 				(pintype "passive")
@@ -2153,7 +2324,7 @@
 			)
 		)
 		(net
-			(code "15")
+			(code "16")
 			(name "unconnected-(J1-D+-PadA6)")
 			(class "Default")
 			(node
@@ -2164,7 +2335,7 @@
 			)
 		)
 		(net
-			(code "16")
+			(code "17")
 			(name "unconnected-(J1-D+-PadB6)")
 			(class "Default")
 			(node
@@ -2175,7 +2346,7 @@
 			)
 		)
 		(net
-			(code "17")
+			(code "18")
 			(name "unconnected-(J1-D--PadA7)")
 			(class "Default")
 			(node
@@ -2186,7 +2357,7 @@
 			)
 		)
 		(net
-			(code "18")
+			(code "19")
 			(name "unconnected-(J1-D--PadB7)")
 			(class "Default")
 			(node
@@ -2197,7 +2368,7 @@
 			)
 		)
 		(net
-			(code "19")
+			(code "20")
 			(name "unconnected-(J1-SBU1-PadA8)")
 			(class "Default")
 			(node
@@ -2208,7 +2379,7 @@
 			)
 		)
 		(net
-			(code "20")
+			(code "21")
 			(name "unconnected-(J1-SBU2-PadB8)")
 			(class "Default")
 			(node
@@ -2219,7 +2390,7 @@
 			)
 		)
 		(net
-			(code "21")
+			(code "22")
 			(name "unconnected-(P2-Pin_4-Pad4)")
 			(class "Default")
 			(node
@@ -2230,7 +2401,7 @@
 			)
 		)
 		(net
-			(code "22")
+			(code "23")
 			(name "unconnected-(U1-~{STDBY}-Pad6)")
 			(class "Default")
 			(node

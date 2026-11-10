@@ -15,3 +15,17 @@ test/vectors.json
 
 # KiCad DRC/ERC reports
 *.rpt
+
+# KiCad plot output outside the tracked out/ layout (gerbers live in out/gerbers/)
+hardware/power-dock/out/*.gbr
+hardware/power-dock/out/*.gbrjob
+hardware/power-dock/out/*.gbl
+hardware/power-dock/out/*.gtl
+hardware/power-dock/out/*.gts
+hardware/power-dock/out/*.gbs
+hardware/power-dock/out/*.gtp
+hardware/power-dock/out/*.gbp
+hardware/power-dock/out/*.gta
+hardware/power-dock/out/*.gba
+hardware/power-dock/out/*.gbo
+hardware/power-dock/out/*.gm1
