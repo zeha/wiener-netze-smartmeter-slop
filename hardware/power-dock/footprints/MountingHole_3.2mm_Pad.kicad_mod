@@ -1,0 +1,88 @@
+(footprint "MountingHole_3.2mm_Pad"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Plated mounting hole, 3.2 mm drill, 6 mm pad")
+	(tags "mounting hole")
+	(property "Reference" "MH**"
+		(at 0 -3.5 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "3d9c2f10-7a41-5c8e-9b26-1f0e5a8c3d11")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "MountingHole_3.2mm_Pad"
+		(at 0 3.5 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8e1b4c72-5d03-4f6a-a9c8-2b7d6e0f4a23")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "c4f8a2d1-9e57-4b3c-8d6f-1a0b9c7e5d34")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e56")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "5a7e9c03-2b6d-4f81-b3e4-9d1c0a8f7e55")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_circle
+		(center 0 0)
+		(end 3.4 0)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "6b3d8f21-4c5e-4a79-9e0f-8c2d1b6a4e66")
+	)
+	(pad "" np_thru_hole circle
+		(at 0 0)
+		(size 6 6)
+		(drill 3.2)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "9f0e5a83-7b2c-4d6e-8a1f-3c9d2e7b0f47")
+	)
+)
