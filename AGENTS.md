@@ -14,7 +14,14 @@ python3 -m venv .venv
 .venv/bin/esphome config config/example_smartmeter.yaml    # schema check
 .venv/bin/esphome compile config/example_smartmeter.yaml   # full firmware build
 .venv/bin/python test/decrypt_test.py                      # Python mirror of the frame logic
+.venv/bin/esphome compile test/hub_only.yaml               # must build without sensor:/text_sensor:
+.venv/bin/esphome compile test/sensor_only.yaml            # must build without text_sensor:
 ```
+
+ESPHome only copies a component's sources into the build when the YAML loads it.
+`sensor` and `text_sensor` are optional here, so every use of them in the C++ is
+inside `#ifdef USE_SENSOR` / `#ifdef USE_TEXT_SENSOR`; compiling only the full
+example config does not catch a missing guard, the two test configs do.
 
 A venv that was moved or copied keeps the old path in its script shebangs, so
 `.venv/bin/esphome` fails with "required file not found"; use

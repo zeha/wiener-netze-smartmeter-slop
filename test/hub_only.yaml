@@ -1,0 +1,29 @@
+# Build regression test: the wiener_netze hub with NO sensor: and NO text_sensor:
+# block. ESPHome only ships a component's headers when the YAML loads it, so the
+# component must compile without esphome/components/sensor and text_sensor.
+#   .venv/bin/python -m esphome compile test/hub_only.yaml
+esphome:
+  name: wn-hub-only
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [wiener_netze]
+
+esp32:
+  board: lolin_s2_mini
+  variant: esp32s2
+  framework:
+    type: esp-idf
+
+logger:
+
+uart:
+  id: meter_uart
+  rx_pin: GPIO21
+  baud_rate: 9600
+
+wiener_netze:
+  uart_id: meter_uart
+  security_key: "0123456789abcdef0123456789abcdef"

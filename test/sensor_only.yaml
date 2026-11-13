@@ -1,0 +1,36 @@
+# Build regression test: wiener_netze sensors but NO text_sensor: block
+# (the common "I only want the numbers" config).
+#   .venv/bin/python -m esphome compile test/sensor_only.yaml
+esphome:
+  name: wn-sensor-only
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [wiener_netze]
+
+esp32:
+  board: lolin_s2_mini
+  variant: esp32s2
+  framework:
+    type: esp-idf
+
+logger:
+
+uart:
+  id: meter_uart
+  rx_pin: GPIO21
+  baud_rate: 9600
+
+wiener_netze:
+  uart_id: meter_uart
+  security_key: "0123456789abcdef0123456789abcdef"
+
+sensor:
+  - platform: wiener_netze
+    type: power_active_plus
+    name: "Power import"
+  - platform: wiener_netze
+    type: telegram_count
+    name: "Telegrams decoded"

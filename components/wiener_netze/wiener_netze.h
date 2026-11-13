@@ -7,9 +7,17 @@
 
 #include "esphome/core/automation.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
+// ESPHome only copies a component's sources into the build when the YAML loads
+// it, so sensor/text_sensor are optional: a config without a `sensor:` or
+// `text_sensor:` block must still compile.
+#ifdef USE_SENSOR
 #include "esphome/components/sensor/sensor.h"
+#endif
+#ifdef USE_TEXT_SENSOR
 #include "esphome/components/text_sensor/text_sensor.h"
+#endif
 
 #include "mbedtls/aes.h"
 
@@ -32,9 +40,13 @@ class WienerNetze : public Component, public uart::UARTDevice {
 
   void set_security_key(std::initializer_list<uint8_t> key);
   void set_read_timeout(uint32_t read_timeout) { this->read_timeout_ = read_timeout; }
+#ifdef USE_SENSOR
   void set_value_sensor(size_t index, sensor::Sensor *sens) { this->value_sensors_[index] = sens; }
   void set_telegram_count_sensor(sensor::Sensor *sens) { this->telegram_count_sensor_ = sens; }
+#endif
+#ifdef USE_TEXT_SENSOR
   void set_timestamp_sensor(text_sensor::TextSensor *sens) { this->timestamp_sensor_ = sens; }
+#endif
   void add_on_telegram_trigger(Trigger<> *trigger) { this->triggers_.push_back(trigger); }
 
  protected:
@@ -54,9 +66,13 @@ class WienerNetze : public Component, public uart::UARTDevice {
   uint32_t last_byte_time_{0};
   uint32_t telegram_count_{0};
 
+#ifdef USE_SENSOR
   std::array<sensor::Sensor *, VALUE_COUNT> value_sensors_{};
   sensor::Sensor *telegram_count_sensor_{nullptr};
+#endif
+#ifdef USE_TEXT_SENSOR
   text_sensor::TextSensor *timestamp_sensor_{nullptr};
+#endif
   std::vector<Trigger<> *> triggers_;
 };
 

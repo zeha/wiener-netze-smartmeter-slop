@@ -143,16 +143,20 @@ void WienerNetze::handle_frame_() {
   ESP_LOGD(TAG, "Telegram %s: +A=%" PRIu32 " Wh -A=%" PRIu32 " Wh +P=%" PRIu32 " W -P=%" PRIu32 " W", timestamp,
            values[0], values[1], values[4], values[5]);
 
+#ifdef USE_SENSOR
   for (size_t i = 0; i < VALUE_COUNT; i++) {
     if (this->value_sensors_[i] == nullptr)
       continue;
     // energy registers are Wh / varh, published as kWh / kvarh
     this->value_sensors_[i]->publish_state(i < 4 ? values[i] / 1000.0f : (float) values[i]);
   }
-  if (this->timestamp_sensor_ != nullptr)
-    this->timestamp_sensor_->publish_state(timestamp);
   if (this->telegram_count_sensor_ != nullptr)
     this->telegram_count_sensor_->publish_state(this->telegram_count_);
+#endif
+#ifdef USE_TEXT_SENSOR
+  if (this->timestamp_sensor_ != nullptr)
+    this->timestamp_sensor_->publish_state(timestamp);
+#endif
   for (auto *trigger : this->triggers_)
     trigger->trigger();
 }
