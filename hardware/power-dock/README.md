@@ -47,8 +47,12 @@ JLC THT assembly or hand-solder them.
   F2 PTC unpopulated for the single-battery dock; populate both to run two
   packs in parallel (~14 Ah).
 - **P1 to S2-Mini jumpers:** P1.1 -> 5V/VBUS, P1.2 -> GND, P1.3 -> IO3,
-  P1.4 -> 3V3, P1.5 -> IO5, P1.6 -> IO21.
-- **P2 Hichi IR head:** 1 = switched 3V3, 2 = GND, 3 = Hichi TX, 4 = not connected.
+  P1.4 -> 3V3, P1.5 -> IO5, P1.6 -> IO11 (UART RX; the config enables the internal
+  pull-up on it).
+- **P2 Hichi IR head:** 1 = switched 3V3, 2 = GND, 3 = the head's data output
+  (yellow wire), 4 = not connected (the green wire, the head's transmit input,
+  is not needed). Go by wire colour: Hichi labels its pads from the
+  microcontroller's side ("TX to TX, RX to RX, not crossed").
 - **Charge LED D1:** lights while the TP4056 is charging and goes out when
   charging ends (C/10 = 50 mA) or with no USB. It runs from the S2-Mini 3V3
   rail, so it only lights while the S2-Mini is powered.

@@ -56,12 +56,28 @@ ota:
 
 uart:
   id: meter_uart
-  rx_pin: GPIO21   # data line of the passive IR read head; receive only, no tx_pin
+  # Data line of the IR read head (Hichi IR TTL: yellow wire); receive only, no
+  # tx_pin. The head's green wire (its IR transmit LED) is not needed.
+  rx_pin:
+    number: GPIO11
+    mode:
+      input: true
+      pullup: true   # ESPHome enables no pull-up on RX by itself
+    # Some IR heads output an inverted signal; if no frame ever arrives, try:
+    # inverted: true
   baud_rate: 9600  # 8N1
-  # Some IR heads output an inverted signal; if no frame ever arrives, try:
-  # rx_pin:
-  #   number: GPIO21
-  #   inverted: true
+
+switch:
+  # Power dock only: GPIO5 low switches the IR head's supply on (P-MOS gate,
+  # pulled up = off). On from boot; in deep sleep the pin floats and the head
+  # is off again. Without the dock the pin is simply unused.
+  - platform: gpio
+    id: ir_head_power
+    pin:
+      number: GPIO5
+      inverted: true
+    restore_mode: ALWAYS_ON
+    internal: true
 
 wiener_netze:
   uart_id: meter_uart

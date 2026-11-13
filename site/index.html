@@ -114,7 +114,7 @@
   <h2>Hardware &amp; wiring</h2>
   <table>
     <tr><th>Part</th><th>Wiring</th></tr>
-    <tr><td>IR read head — Hichi IR TTL v1.1 (TYP HB0014), 3.3 V TTL output (any 3.3 V IR-TTL head works)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA → GPIO21</code> (receive only; if no frame ever arrives, set <code>inverted: true</code>). Mount it with the cable pointing downwards towards the meter's window; on a transmit/receive head in receive-only mode, cover the transmit (lighter) LED so the meter doesn't treat it as an input attempt</td></tr>
+    <tr><td>IR read head — Hichi IR TTL v1.1 (TYP HB0014), 3.3 V TTL output (any 3.3 V IR-TTL head works)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA (yellow wire) → GPIO11</code> (receive only, internal pull-up enabled in the config; the green wire is not needed; if no frame ever arrives, set <code>inverted: true</code>). Mount it with the cable pointing downwards towards the meter's window; on a transmit/receive head in receive-only mode, cover the transmit (lighter) LED so the meter doesn't treat it as an input attempt</td></tr>
     <tr><td>LiPo battery — Olimex BATTERY-LIPO7000mAh (3.7 V, 7000 mAh, built-in overcharge and short-circuit protection)</td><td>to the board's <code>5V/VBUS</code> pin, through the on-board regulator (a charged LiPo reaches 4.2 V and must not be applied to the 3V3 pin). Its 2-pin JST-PH plug is not polarity-keyed: match the red wire (pin 1, +) to the socket's + before plugging in. The board has no battery charger — swap the pack when flat</td></tr>
     <tr><td>Voltage divider (2 × 1 MΩ, optional 100 nF to GND)</td><td>battery + → R1 → <code>GPIO3</code> (ADC1) → R2 → GND; the ESPHome config maps the reading back to battery volts</td></tr>
   </table>
@@ -151,7 +151,11 @@
 # set inverted: true on the rx_pin.
 uart:
   id: meter_uart
-  rx_pin: GPIO21
+  rx_pin:
+    number: GPIO11
+    mode:
+      input: true
+      pullup: true
   baud_rate: 9600
 
 wiener_netze:

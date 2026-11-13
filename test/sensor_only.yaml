@@ -20,7 +20,11 @@ logger:
 
 uart:
   id: meter_uart
-  rx_pin: GPIO21
+  rx_pin:
+    number: GPIO11
+    mode:
+      input: true
+      pullup: true
   baud_rate: 9600
 
 wiener_netze:

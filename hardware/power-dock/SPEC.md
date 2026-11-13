@@ -60,7 +60,8 @@ Vault context (read for background, not needed to build):
 - **IR_EN** — P1 pin 5, U2 gate (pin 1). Driven low by S2 GPIO5 to turn the
   head on; pulled high by R4 = off by default.
 - **IR_PWR** — U2 pin 3 (drain), P2 pin 1.
-- **HICH_TX** — P2 pin 3 (Hichi TX), P1 pin 6 (to S2-Mini IO21 = UART2 RX).
+- **HICH_TX** — P2 pin 3 (the Hichi head's data output, yellow wire), P1 pin 6
+  (to S2-Mini IO11 = UART RX, internal pull-up enabled in the config).
 - **NC** — TP4056 pin 6 (STDBY), P2 pin 4 (TX spare), USB-C data pads
   A5-A8, B5-B8.
 
@@ -103,13 +104,13 @@ convention: red wire = + = pin 1.
 ## Headers
 
 - **P1 (1x6, THT, pin 1 marked)**: 1 = VBUS (BAT+), 2 = GND, 3 = BATMID
-  (IO3), 4 = 3V3, 5 = IR_EN (IO5), 6 = UARTRX (IO21).
+  (IO3), 4 = 3V3, 5 = IR_EN (IO5), 6 = UARTRX (IO11).
 - **P2 (1x4, THT, pin 1 marked)**: 1 = IR_PWR (gated 3V3), 2 = GND,
-  3 = HICH_TX (Hichi TX), 4 = spare (NC).
+  3 = HICH_TX (the head's data output, yellow wire), 4 = spare (NC).
 
 Jumpers to the S2-Mini 2x16 header (verified against WEMOS schematic
 v1.0.0): P1.1->5V/VBUS, P1.2->GND, P1.3->IO3, P1.4->3V3, P1.5->IO5,
-P1.6->IO21.
+P1.6->IO11.
 
 ## Layout constraints
 

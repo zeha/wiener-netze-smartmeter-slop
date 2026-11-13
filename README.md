@@ -29,12 +29,16 @@ The logic is a port of [aldadic/esp-smartmeter-reader](https://github.com/aldadi
 |---------|---------|
 | VCC     | 3V3     |
 | GND     | GND     |
-| Data (TX of the head) | GPIO21 |
+| Data out of the head (Hichi IR TTL: yellow wire) | GPIO11 |
 
-No TX line is needed: the meter only sends. If nothing arrives at all, the head
-may output an inverted signal; set `inverted: true` on the `rx_pin` (see the
-example config). The S2 Mini logs over its native USB port, so the hardware UART
-is free for the meter.
+No TX line is needed: the meter only sends; the head's transmit input (Hichi:
+green wire) stays unconnected. ESPHome enables no pull-up on the RX pin by
+itself, so the config turns on the internal one (`mode: {input: true, pullup:
+true}`). If nothing arrives at all, the head may output an inverted signal; set
+`inverted: true` on the `rx_pin` (see the example config). With the
+[power dock](hardware/power-dock/README.md) the head's supply is switched by
+GPIO5 (low = on); the example config turns it on at boot. The S2 Mini logs over
+its native USB port, so the hardware UART is free for the meter.
 
 ### Battery voltage divider
 
@@ -70,7 +74,11 @@ external_components:
 
 uart:
   id: meter_uart
-  rx_pin: GPIO21
+  rx_pin:
+    number: GPIO11
+    mode:
+      input: true
+      pullup: true
   baud_rate: 9600
 
 wiener_netze:
