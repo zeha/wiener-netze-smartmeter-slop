@@ -56,16 +56,27 @@ ota:
 
 uart:
   id: meter_uart
-  # Data line of the IR read head (Hichi IR TTL: yellow wire); receive only, no
-  # tx_pin. The head's green wire (its IR transmit LED) is not needed.
+  # Data line of the IR read head (Hichi IR TTL: yellow wire; amsreader ran it
+  # as "HAN RX GPIO11" with Pullup ticked); receive only, no tx_pin. The head's
+  # green wire (its IR transmit LED) is held low below.
   rx_pin:
     number: GPIO11
     mode:
       input: true
-      pullup: true   # ESPHome enables no pull-up on RX by itself
+      pullup: true   # amsreader had "Pullup" ticked (pullup on the RX pin)
     # Some IR heads output an inverted signal; if no frame ever arrives, try:
     # inverted: true
-  baud_rate: 9600  # 8N1
+  baud_rate: 9600  # 8N1; the meter's even parity bit (8E1) is consumed as the stop bit
+
+output:
+  # The green wire (the head's IR transmit LED) carries no data in passive
+  # mode: the meter pushes its telegram on its own. amsreader's passive mode
+  # held this line OUTPUT LOW on boot, so we replicate that exactly instead of
+  # leaving the pin floating. If the meter's display starts showing "PIN"
+  # after flashing (LED would be lit at the meter), add `inverted: true`.
+  - platform: gpio
+    id: ir_led_hold
+    pin: GPIO12
 
 switch:
   # Power dock only: GPIO5 low switches the IR head's supply on (P-MOS gate,
