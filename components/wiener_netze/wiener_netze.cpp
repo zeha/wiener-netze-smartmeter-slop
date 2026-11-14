@@ -104,6 +104,12 @@ void WienerNetze::handle_frame_() {
   if (!this->check_crc_())
     return;
 
+  // The raw frame is what test/vectors.json needs; 210 hex chars fit one log line.
+  char hex[2 * FRAME_LENGTH + 1];
+  for (size_t i = 0; i < FRAME_LENGTH; i++)
+    snprintf(hex + 2 * i, 3, "%02X", this->frame_[i]);
+  ESP_LOGD(TAG, "Frame: %s", hex);
+
   // AES-128-GCM payload decrypted as CTR: IV = system title (8) + frame counter (4) + counter 2
   uint8_t iv[16] = {0};
   memcpy(iv, this->frame_.data() + HEADER_LENGTH, 8);
@@ -140,8 +146,10 @@ void WienerNetze::handle_frame_() {
   char timestamp[20];
   snprintf(timestamp, sizeof(timestamp), "%04" PRIu32 "-%02" PRIu32 "-%02" PRIu32 " %02" PRIu32 ":%02" PRIu32
            ":%02" PRIu32, year, month, day, hour, minute, second);
-  ESP_LOGD(TAG, "Telegram %s: +A=%" PRIu32 " Wh -A=%" PRIu32 " Wh +P=%" PRIu32 " W -P=%" PRIu32 " W", timestamp,
-           values[0], values[1], values[4], values[5]);
+  ESP_LOGD(TAG,
+           "Telegram %s: +A=%" PRIu32 " Wh -A=%" PRIu32 " Wh +Q=%" PRIu32 " varh -Q=%" PRIu32 " varh +P=%" PRIu32
+           " W -P=%" PRIu32 " W +R=%" PRIu32 " var -R=%" PRIu32 " var",
+           timestamp, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7]);
 
 #ifdef USE_SENSOR
   for (size_t i = 0; i < VALUE_COUNT; i++) {
