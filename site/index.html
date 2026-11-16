@@ -87,7 +87,7 @@
     <li><strong>The meter does the pushing.</strong> M1 meters send a complete consumption telegram through their infrared customer interface roughly every second — no query, no wired bus, no installer access needed.</li>
     <li><strong>An IR read head</strong> (a Hichi IR TTL v1.1, a 3.3 V TTL phototransistor module) sits in front of the meter's IR window, about 5–10 cm away, cable pointing downwards, and turns the light into a UART signal (9600 baud, 8N1).</li>
     <li><strong>A Wemos S2 Mini (ESP32-S2)</strong> runs a custom <code>wiener_netze</code> ESPHome component: it waits for the 105-byte frame, verifies the CRC-16/X-25, decrypts the payload with the meter's security key, and publishes the values to Home Assistant over the native ESPHome API.</li>
-    <li><strong>Battery + deep sleep.</strong> There is no power outlet at the meter. The board wakes every few minutes, reads one telegram, sends it, and sleeps again. A voltage divider on the battery feeds the S2's ADC, so Home Assistant also shows the remaining battery.</li>
+    <li><strong>Battery + deep sleep.</strong> There is no power outlet at the meter. The board wakes every few minutes, reads one telegram, sends it, and sleeps again. The pack is charged from the power dock's USB-C input (below); a battery divider on the dock is designed in but not enabled in the current build.</li>
   </ul>
 
   <h2>The protocol, in one table</h2>
@@ -107,27 +107,27 @@
   <div class="grid">
     <div class="card"><h3>Energy</h3><p>Import / export (kWh) and reactive import / export (kvarh) — usable for dashboards and cost tracking.</p></div>
     <div class="card"><h3>Power</h3><p>Live active and reactive power, import and export (W, var).</p></div>
-    <div class="card"><h3>Device health</h3><p>Decoded-telegram counter, meter timestamp, Wi-Fi and battery status — you know when the read head needs attention.</p></div>
-    <div class="card"><h3>Battery monitoring</h3><p>Battery voltage on the S2's ADC via a 1 MΩ divider; state-of-charge estimate as a battery sensor.</p></div>
+    <div class="card"><h3>Device health</h3><p>Decoded-telegram counter, meter timestamp, Wi-Fi signal, chip temperature and reset reason — you know when the read head needs attention, and the debug sensors explain overnight outages.</p></div>
+    <div class="card"><h3>Battery monitoring</h3><p>The power dock carries a 1 MΩ divider to the S2's ADC; once wired and enabled, Home Assistant shows battery voltage and a state-of-charge estimate. Not enabled in the current build.</p></div>
   </div>
 
   <h2>Hardware &amp; wiring</h2>
   <table>
     <tr><th>Part</th><th>Wiring</th></tr>
-    <tr><td>IR read head — Hichi IR TTL v1.1 (TYP HB0014), 3.3 V TTL output (any 3.3 V IR-TTL head works)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA (yellow wire) → GPIO11</code> (receive only, internal pull-up enabled in the config; if no frame ever arrives, set <code>inverted: true</code>), <code>green wire → GPIO12</code> — the head's transmit input, held low by the config (passive mode, as the old amsreader firmware did; if the meter display starts showing "PIN", add <code>inverted: true</code>). Mount it with the cable pointing downwards towards the meter's window; on a transmit/receive head in receive-only mode, cover the transmit (lighter) LED so the meter doesn't treat it as an input attempt</td></tr>
+    <tr><td>IR read head — Hichi IR TTL v1.1 (TYP HB0014), 3.3 V TTL output (any 3.3 V IR-TTL head works)</td><td><code>VCC → 3V3</code>, <code>GND → GND</code>, <code>DATA (yellow wire) → GPIO11</code> (receive only, internal pull-up enabled in the config; if no frame ever arrives, set <code>inverted: true</code>), <code>green wire → GPIO12</code> — the head's transmit input; the current config leaves it undriven — if the meter display starts showing "PIN" or no frame ever arrives, hold it low to force passive mode (see the example config's note). Mount it with the cable pointing downwards towards the meter's window; on a transmit/receive head in receive-only mode, cover the transmit (lighter) LED so the meter doesn't treat it as an input attempt</td></tr>
     <tr><td>LiPo battery — Olimex BATTERY-LIPO7000mAh (3.7 V, 7000 mAh, built-in overcharge and short-circuit protection)</td><td>to the board's <code>5V/VBUS</code> pin, through the on-board regulator (a charged LiPo reaches 4.2 V and must not be applied to the 3V3 pin). Its 2-pin JST-PH plug is not polarity-keyed: match the red wire (pin 1, +) to the socket's + before plugging in. The bare board has no battery charger: without the <a href="#power-dock">power dock</a> below, swap the pack when flat; the dock charges it from USB-C</td></tr>
-    <tr><td>Voltage divider (2 × 1 MΩ, optional 100 nF to GND)</td><td>battery + → R1 → <code>GPIO3</code> (ADC1) → R2 → GND; the ESPHome config maps the reading back to battery volts</td></tr>
+    <tr><td>Voltage divider (2 × 1 MΩ, optional 100 nF to GND)</td><td>battery + → R1 → <code>GPIO3</code> (ADC1) → R2 → GND; the commented-out battery sensor in the example config maps the reading back to battery volts</td></tr>
   </table>
-  <p style="font-size:14px;color:var(--muted)">The board is powered from the battery via the 5V/VBUS pin and the on-board regulator. In deep sleep the board itself draws only tens of µA — what matters overnight is the IR head's idle current (it stays on 3V3): a bare-phototransistor type costs a few µA, an amplifier module a few mA — the <a href="#power-dock">power dock</a> below switches the head's supply off in deep sleep either way.</p>
+  <p style="font-size:14px;color:var(--muted)">The board is powered from the battery via the 5V/VBUS pin and the on-board regulator. In deep sleep the board itself draws only tens of µA — what matters overnight is the IR head's idle current (it stays on 3V3): a bare-phototransistor type costs a few µA, an amplifier module a few mA — the <a href="#power-dock">power dock</a> below can switch the head's supply off in deep sleep via its P-MOS gate — the current build keeps the head powered continuously.</p>
 
   <h2 id="power-dock">The power dock</h2>
   <p>The add-on board that makes the build permanent: a two-layer 65 × 59 mm board (KiCad, v2 layout with mounting holes and JLC border margin, DRC-clean) that the S2 Mini and the IR head sit on. It does three things the bare board can't:</p>
   <ul>
     <li><strong>Charges the LiPo.</strong> TP4056 charger (500 mA) with USB-C input and a charge LED — there is no outlet at the meter, so the dock is how the pack gets topped up from any bench charger. An optional second battery socket (J3) parallels a second identical pack for ~14 Ah.</li>
-    <li><strong>Switches the IR head's supply.</strong> A P-MOS high-side gate is driven by <code>GPIO5</code> (low = on, off by default): while the board is awake the head is powered, in deep sleep it is fully off instead of idling on 3V3.</li>
+    <li><strong>Switches the IR head's supply.</strong> A P-MOS high-side gate is driven by <code>GPIO5</code> (low = on, off by default): while the board is awake the head is powered, in deep sleep it is fully off instead of idling on 3V3. The dock carries the gate; the current reader build does not drive GPIO5, so the head stays powered.</li>
     <li><strong>Carries the battery voltage divider</strong> (1 MΩ / 1 MΩ to <code>GPIO3</code>) on the board, so no jumper wires on the battery side.</li>
   </ul>
-  <p>The S2 Mini daisy-chains to the dock's 6-pin header with short jumper wires: <code>5V/VBUS</code>, <code>GND</code>, <code>IO3</code>, <code>3V3</code>, <code>IO5</code>, <code>IO11</code>; the head plugs into its 4-pin connector (switched 3V3, GND, data, and the green wire to <code>GPIO12</code>). The design is finished and the production exports (gerbers, BOM, pick-and-place) are ready for a JLCPCB order — as of 2026-11-13 it has not been ordered yet.</p>
+  <p>The S2 Mini daisy-chains to the dock's 6-pin header with short jumper wires: <code>5V/VBUS</code>, <code>GND</code>, <code>IO3</code>, <code>3V3</code>, <code>IO5</code>, <code>IO11</code>; the head plugs into its 4-pin connector (switched 3V3, GND, data, and the green wire to <code>GPIO12</code>). The dock is built and deployed (JLCPCB, v2): the S2 Mini and IR head sit on it, and the pack is charged from its USB-C input.</p>
 
   <h2>Battery life</h2>
   <p>Per wake-up (boot + Wi-Fi ≈ 2 s, one telegram ≈ 1.5 s, publish ≈ 0.5 s) the board uses roughly 0.1–0.23 mAh. The meter pushes ~1×/second, so every wake-up always has a telegram ready — the wake interval is the only knob.</p>
@@ -137,17 +137,16 @@
     <tr><td><strong>5 min (default)</strong></td><td><strong>~6 months</strong></td><td><strong>~3 months</strong></td></tr>
     <tr><td>10 min</td><td>~12 months</td><td>~5 months</td></tr>
   </table>
-  <p style="font-size:14px;color:var(--muted)">Estimate, to be confirmed by measurement. The divider lets Home Assistant track how fast the real battery drains.</p>
+  <p style="font-size:14px;color:var(--muted)">Estimate, to be confirmed by measurement. Once the dock's battery divider is wired and enabled, Home Assistant will track how fast the real battery drains.</p>
 
   <h2>Status</h2>
   <table>
     <tr><th>Step</th><th>State</th></tr>
     <tr><td>Research (interface, protocol, reference firmware)</td><td class="ok">done</td></tr>
-    <tr><td><code>wiener_netze</code> ESPHome component + device config (incl. battery sensors)</td><td class="ok">built &amp; compiled (744 KB, 18.3 % of 4 MB flash, 0 warnings)</td></tr>
-    <tr><td>Power dock (TP4056 charger, USB-C input, P-MOS switch for the head supply, on-board divider) — KiCad design</td><td class="ok">v2 layout done: DRC-clean, JLC production exports ready</td></tr>
-    <tr><td>Power dock PCB ordered and assembled (JLCPCB)</td><td class="wait">next</td></tr>
-    <tr><td>Bench test at the meter (IR alignment, key, real telegram capture)</td><td class="wait">after the dock is on the bench</td></tr>
-    <tr><td>Repo on GitHub (<a href="https://github.com/zeha/wiener-netze-smartmeter-slop">zeha/wiener-netze-smartmeter-slop</a>), HA integration via <code>external_components</code></td><td class="ok">repo public - wire up and flash</td></tr>
+    <tr><td><code>wiener_netze</code> ESPHome component + device config</td><td class="ok">built, compiled and deployed on the reader</td></tr>
+    <tr><td>Power dock (TP4056 charger, USB-C input, P-MOS switch for the head supply, on-board divider) — KiCad design + PCB (JLCPCB)</td><td class="ok">v2 layout done, ordered and assembled, deployed</td></tr>
+    <tr><td>Field test at the meter (IR alignment, key, real telegram capture)</td><td class="ok">done — reader deployed and decoding live telegrams</td></tr>
+    <tr><td>Repo on GitHub (<a href="https://github.com/zeha/wiener-netze-smartmeter-slop">zeha/wiener-netze-smartmeter-slop</a>), HA integration via <code>external_components</code></td><td class="ok">repo public, reader flashed and deployed</td></tr>
     <tr><td>Long-term battery measurement</td><td class="wait">running in the wild</td></tr>
   </table>
 
@@ -169,17 +168,15 @@ uart:
       pullup: true
   baud_rate: 9600
 
-# the head's green wire (transmit input): held low = passive mode
-output:
-  - platform: gpio
-    id: ir_led_hold
-    pin: GPIO12
+# the head's green wire (transmit input, GPIO12): the current config
+# leaves it undriven; if the meter shows "PIN" or no frame ever arrives,
+# hold it low to force passive mode (see the example config's note)
 
 wiener_netze:
   uart_id: meter_uart
   security_key: "&lt;32-hex key from the Wiener Netze portal&gt;"
   read_timeout: 10s</code></pre>
-  <p>The <code>uart:</code> block is mandatory: it is how the component receives the IR head's data line (9600 baud, 8N1, no TX). Placeholders you must fill in: Wi-Fi credentials, the ESPHome API encryption key (<code>openssl rand -base64 32</code>), and the meter security key from the portal. The full example config in the repo adds deep-sleep wake-up every 5 minutes, the battery voltage sensor and the <code>GPIO12</code> output that holds the head's green wire low.</p>
+  <p>The <code>uart:</code> block is mandatory: it is how the component receives the IR head's data line (9600 baud, 8N1, no TX). Placeholders you must fill in: Wi-Fi credentials, the ESPHome API encryption key (<code>openssl rand -base64 32</code>), and the meter security key from the portal. The full example config in the repo adds deep-sleep wake-up every 5 minutes, the diagnostic sensors (chip temperature, CPU frequency, Wi-Fi signal, reset reason) and a commented-out battery voltage sensor (enable once the dock's divider is wired).</p>
 
   <footer class="page">
     Firmware logic derived from <a href="https://github.com/aldadic/esp-smartmeter-reader">aldadic/esp-smartmeter-reader</a> (GPL-3.0),

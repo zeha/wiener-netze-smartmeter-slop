@@ -36,13 +36,16 @@ green wire) stays unconnected. ESPHome enables no pull-up on the RX pin by
 itself, so the config turns on the internal one (`mode: {input: true, pullup:
 true}`). If nothing arrives at all, the head may output an inverted signal; set
 `inverted: true` on the `rx_pin` (see the example config). With the
-[power dock](hardware/power-dock/README.md) the head's supply is switched by
-GPIO5 (low = on); the example config turns it on at boot. The S2 Mini logs over
+[power dock](hardware/power-dock/README.md) the head's supply can be switched by
+GPIO5 (low = on) via the dock's P-MOS gate; the current example config leaves
+GPIO5 undriven, so the head stays powered continuously. The S2 Mini logs over
 its native USB port, so the hardware UART is free for the meter.
 
 ### Battery voltage divider
 
-The example config measures the battery of the 7000 mAh LiPo:
+A divider on the power dock can measure the battery of the 7000 mAh LiPo; the
+battery sensor in the example config is commented out — enable it once the
+divider is wired:
 
 | Part | Connection |
 |------|------------|
@@ -140,7 +143,7 @@ is the fallback when no telegram or no WiFi comes. To keep the wake time short:
   the 3V3 pin, and consider removing the power LED (see the voltage divider
   above for measuring the battery).
 
-Battery sensors: `Smartmeter battery voltage` (V) is sampled once per wake-up,
+Battery sensors (the block is commented out in the current example config — enable it once the divider is wired): `Smartmeter battery voltage` (V) is sampled once per wake-up,
 right after boot (`esphome.on_boot` at priority 500, before WiFi starts), as
 the average of 64 ADC readings multiplied by 2 for the divider.
 `Smartmeter battery level` (%) maps that voltage with a rough LiPo curve:

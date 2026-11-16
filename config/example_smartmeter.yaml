@@ -1,104 +1,103 @@
-# Wiener Netze M1 smart meter (Iskraemeko) -> Home Assistant
-# Board: Wemos S2 Mini (ESP32-S2), battery powered, deep sleep between readings.
+# Smart meter reader: Wiener Netze M1 (Iskraemeko) -> Home Assistant
 #
-# Placeholders to replace before flashing (search for "CHANGE ME"):
-#   wifi ssid/password, api encryption key, wiener_netze security_key.
-# Better: move them to secrets.yaml and use !secret.
+# This file mirrors the config that is actually running on the deployed
+# reader (kept in the Home Assistant ESPHome builder); every secret and
+# network detail is replaced by a placeholder. Replace the "CHANGE ME"
+# values - and the entries in secrets.yaml - before flashing.
+#
+# Hardware: Wemos S2 Mini (ESP32-S2, 4 MB flash), passive IR read head,
+# 7000 mAh LiPo, deep sleep between readings.
+#
+#   VCC  -> 3V3
+#   GND  -> GND
+#   Data out of the head (Hichi IR TTL: yellow wire) -> GPIO11
+#
+# ESPHome enables no pull-up on the RX pin by itself; the internal one is
+# turned on below. If nothing arrives at all, the head may output an
+# inverted signal - set `inverted: true` on rx_pin.
 
 esphome:
-  name: smartmeter-wiener-netze
-  friendly_name: Smartmeter Wiener Netze
+  name: smartmeter-reader
+  friendly_name: Smartmeter reader
   on_boot:
-    # Priority 500 runs after the sensors are set up (600) and before WiFi
-    # starts (250), so the battery is sampled before the radio transmits.
+    # Sample the chip temperature once per wake-up (priority 500 runs
+    # after the sensors are set up at 600, before WiFi starts at 250).
+    # The sensor itself polls only on demand (update_interval: never).
     priority: 500
     then:
-      - component.update: battery_voltage
+      - component.update: chip_temperature
+
+# Enables the debug sensor/text_sensor platforms below (CPU frequency,
+# reset reason) - required, no options.
+debug:
 
 external_components:
-  # Local development: the component lives in ../components of this repo.
-  - source:
-      type: local
-      path: ../components
+  # Same commit the deployed firmware was built from; bump to a newer
+  # commit (or @main) once the change you need has landed.
+  - source: github://zeha/wiener-netze-smartmeter-slop@b03548d024f8bb8c4497457264e9bb4d39ad721e
     components: [wiener_netze]
-  # In Home Assistant use instead:
-  # - source: github://zeha/wiener-netze-smartmeter-slop@main
+  # Local development: the component lives in ../components of this repo.
+  # - source:
+  #     type: local
+  #     path: ../components
   #   components: [wiener_netze]
 
 esp32:
-  board: lolin_s2_mini  # Wemos/LOLIN S2 Mini (ESPHome has no "wemos_s2_mini" id)
   variant: esp32s2
+  flash_size: 4MB
   framework:
     type: esp-idf
 
+# INFO is enough once it works; raise to DEBUG for frame-level logs.
 logger:
-  # The S2 Mini logs over native USB, the hardware UARTs stay free for the meter.
-  level: DEBUG
 
-wifi:
-  ssid: "YOUR_WIFI_SSID"          # CHANGE ME
-  password: "YOUR_WIFI_PASSWORD"  # CHANGE ME
-  # Recommended for battery use: a static IP skips DHCP and shortens every wake-up.
-  # manual_ip:
-  #   static_ip: 192.168.1.50
-  #   gateway: 192.168.1.1
-  #   subnet: 255.255.255.0
-  #   dns1: 192.168.1.1
-  fast_connect: true
+uart:
+  id: meter_uart
+  rx_pin:
+    number: GPIO11
+    mode:
+      input: true
+      pullup: true
+  baud_rate: 9600
 
 api:
   encryption:
-    # CHANGE ME: placeholder (decodes to "CHANGE_ME..."); generate your own with `openssl rand -base64 32`.
+    # CHANGE ME: placeholder (decodes to "CHANGE_ME..."); generate your own
+    # with `openssl rand -base64 32`.
     key: "Q0hBTkdFX01FX0NIQU5HRV9NRV9DSEFOR0VfTUVfISE="
 
 ota:
   - platform: esphome
 
-uart:
-  id: meter_uart
-  # Data line of the IR read head (Hichi IR TTL: yellow wire; amsreader ran it
-  # as "HAN RX GPIO11" with Pullup ticked); receive only, no tx_pin. The head's
-  # green wire (its IR transmit LED) is held low below.
-  rx_pin:
-    number: GPIO11
-    mode:
-      input: true
-      pullup: true   # amsreader had "Pullup" ticked (pullup on the RX pin)
-    # Some IR heads output an inverted signal; if no frame ever arrives, try:
-    # inverted: true
-  baud_rate: 9600  # 8N1; the meter's even parity bit (8E1) is consumed as the stop bit
+wifi:
+  # Provided by secrets.yaml (in the builder: the secrets pane), e.g.:
+  #   wifi_ssid: "YourHomeWifi"
+  #   wifi_password: "your-wifi-password"
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  # Fallback access point when the home Wi-Fi is unreachable (CHANGE ME):
+  ap:
+    ssid: "Smartmeter reader AP"
+    password: "CHANGE_ME"
+  # A static IP shortens the wake-up time (CHANGE ME to your network):
+  # manual_ip:
+  #   static_ip: 192.168.0.50
+  #   gateway: 192.168.0.1
+  #   subnet: 255.255.255.0
+  #   dns1: 192.168.0.1
 
-output:
-  # The green wire (the head's IR transmit LED) carries no data in passive
-  # mode: the meter pushes its telegram on its own. amsreader's passive mode
-  # held this line OUTPUT LOW on boot, so we replicate that exactly instead of
-  # leaving the pin floating. If the meter's display starts showing "PIN"
-  # after flashing (LED would be lit at the meter), add `inverted: true`.
-  - platform: gpio
-    id: ir_led_hold
-    pin: GPIO12
-
-switch:
-  # Power dock only: GPIO5 low switches the IR head's supply on (P-MOS gate,
-  # pulled up = off). On from boot; in deep sleep the pin floats and the head
-  # is off again. Without the dock the pin is simply unused.
-  - platform: gpio
-    id: ir_head_power
-    pin:
-      number: GPIO5
-      inverted: true
-    restore_mode: ALWAYS_ON
-    internal: true
+captive_portal:
 
 wiener_netze:
   uart_id: meter_uart
-  # CHANGE ME: the 32-hex-character key from the Wiener Netze Smart Meter portal
-  # (Kundenschnittstelle). This value is a placeholder and will not decrypt anything.
+  # CHANGE ME: your 32-hex-digit meter key from the portal. Never commit a
+  # real key - keep it in secrets.yaml (`security_key: !secret meter_key`).
   security_key: "0123456789abcdef0123456789abcdef"
   read_timeout: 10s
   on_telegram:
-    # One telegram per wake-up is enough: wait until Home Assistant is connected
-    # so the values are delivered, then go back to sleep.
+    # One telegram per wake-up is enough: wait until Home Assistant is
+    # connected so the values are delivered, then go back to sleep.
     - wait_until:
         condition: api.connected
         timeout: 20s
@@ -107,56 +106,14 @@ wiener_netze:
 
 deep_sleep:
   id: deep_sleep_1
-  # Fallback if no telegram arrives (IR head misaligned, wrong key, no WiFi).
+  # Fallback if no telegram arrives (IR head misaligned, wrong key, no
+  # WiFi): sleep after this time regardless.
   run_duration: 40s
-  # The meter pushes about once per second; 1min..10min are sensible, longer saves battery.
+  # The meter pushes about once per second; 1min..10min are sensible,
+  # longer saves battery.
   sleep_duration: 5min
 
 sensor:
-  # Battery: 1 MOhm / 1 MOhm divider from the LiPo's + terminal (before any
-  # regulator, never the board's 3V3 rail) to GPIO3 (ADC1), lower resistor to
-  # GND, optional 100 nF from GPIO3 to GND. Sampled once per wake-up, right
-  # after boot and before WiFi transmits; WiFi load makes the cell sag a little,
-  # so treat the value as an estimate.
-  - platform: adc
-    id: battery_voltage
-    name: "Smartmeter battery voltage"
-    pin: GPIO3
-    attenuation: 12db
-    samples: 64              # oversampling: average of 64 readings per update
-    update_interval: never   # sampled by esphome.on_boot above
-    device_class: voltage
-    unit_of_measurement: V
-    state_class: measurement
-    accuracy_decimals: 2
-    entity_category: diagnostic
-    filters:
-      - multiply: 2.0        # divider ratio 0.5: pin voltage -> battery voltage
-    on_value:
-      - component.update: battery_level
-  - platform: template
-    id: battery_level
-    name: "Smartmeter battery level"
-    device_class: battery
-    unit_of_measurement: "%"
-    state_class: measurement
-    accuracy_decimals: 0
-    entity_category: diagnostic
-    update_interval: never   # updated whenever a new voltage arrives
-    # Rough LiPo open-circuit curve; good enough as a reminder to recharge.
-    lambda: |-
-      const float v = id(battery_voltage).state;
-      if (std::isnan(v)) return {};
-      if (v >= 4.15f) return 100.0f;
-      if (v >= 4.05f) return 85.0f;
-      if (v >= 3.95f) return 70.0f;
-      if (v >= 3.85f) return 55.0f;
-      if (v >= 3.75f) return 40.0f;
-      if (v >= 3.65f) return 25.0f;
-      if (v >= 3.55f) return 12.0f;
-      if (v >= 3.45f) return 5.0f;
-      return 0.0f;
-
   - platform: wiener_netze
     type: energy_active_plus
     name: "Energy import"
@@ -184,8 +141,55 @@ sensor:
   - platform: wiener_netze
     type: telegram_count
     name: "Telegrams decoded"
+  # Diagnostics (added 2026-11-15): what the last reset was, how warm the
+  # hallway/cupboard is, and the WiFi link at the meter.
+  - platform: internal_temperature
+    id: chip_temperature
+    name: "Internal temperature sensor"
+    update_interval: never  # sampled once per wake-up, see esphome.on_boot
+  - platform: debug
+    cpu_frequency:
+      name: "CPU frequency"
+  - platform: wifi_signal
+    name: "WiFi signal sensor"
+  # Battery voltage - not in the deployed build: the 1 MOhm divider lives
+  # on the power dock, which is not wired at the meter yet. Un-comment
+  # once the divider is connected (R1 1 MOhm battery+ -> GPIO3, R2 1 MOhm
+  # GPIO3 -> GND, optionally C 100 nF):
+  # - platform: adc
+  #   id: battery_voltage
+  #   name: "Smartmeter battery voltage"
+  #   pin: GPIO3
+  #   attenuation: 12db
+  #   update_interval: never
+  # - platform: template
+  #   name: "Smartmeter battery level"
+  #   unit_of_measurement: "%"
+  #   accuracy_decimals: 0
+  #   device_class: battery
+  #   state_class: measurement
+  #   lambda: |-
+  #     auto v = id(battery_voltage).state * 2.0;   # 1:1 divider
+  #     if (v >= 4.15f) return 100.0;
+  #     if (v >= 4.05f) return 85.0;
+  #     if (v >= 3.95f) return 70.0;
+  #     if (v >= 3.85f) return 55.0;
+  #     if (v >= 3.75f) return 40.0;
+  #     if (v >= 3.65f) return 25.0;
+  #     if (v >= 3.55f) return 12.0;
+  #     if (v >= 3.45f) return 5.0;
+  #     return 0.0;
 
 text_sensor:
   - platform: wiener_netze
     type: timestamp
     name: "Meter time"
+  - platform: debug
+    reset_reason:
+      name: "Reset reason"
+
+# Not in the deployed config: the customer interface may also be driven
+# by a connected amsreader. If the board ever shows "PIN" or no frames
+# arrive at all, hold the head's transmit input (Hichi: green wire) low to
+# force the meter into passive mode - GPIO12, `initial_state: true`, plus
+# `output.turn_on` in esphome.on_boot above.
