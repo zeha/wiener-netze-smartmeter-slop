@@ -6,7 +6,8 @@
 # values - and the entries in secrets.yaml - before flashing.
 #
 # Hardware: Wemos S2 Mini (ESP32-S2, 4 MB flash), passive IR read head,
-# 7000 mAh LiPo, deep sleep between readings.
+# 7000 mAh LiPo, deep sleep between readings. The board's built-in LED
+# (GPIO15) is the status indicator while awake, no wiring needed.
 #
 #   VCC  -> 3V3
 #   GND  -> GND
@@ -23,9 +24,36 @@ esphome:
     # Sample the chip temperature once per wake-up (priority 500 runs
     # after the sensors are set up at 600, before WiFi starts at 250).
     # The sensor itself polls only on demand (update_interval: never).
-    priority: 500
-    then:
-      - component.update: chip_temperature
+    - priority: 500
+      then:
+        - component.update: chip_temperature
+    # Status LED (design: vault note
+    # projects/wiener-netze-smartmeter/research/led-status-indicator,
+    # 2026-11-16): slow blink = alive; after 15 s, solid = Wi-Fi down,
+    # fast blink = Wi-Fi up but no telegram yet (meter/IR problem).
+    # A slow-but-working AP fallback can show a false solid for a few
+    # seconds; the first telegram cancels it (see on_telegram).
+    - priority: 490
+      then:
+        - light.turn_on:
+            id: status_led
+            effect: "Slow blink"
+        - delay: 15s
+        - if:
+            condition: wifi.connected
+            then:
+              - if:
+                  condition:
+                    lambda: |-
+                      return !id(telegram_count).has_state();
+                  then:
+                    - light.turn_on:
+                        id: status_led
+                        effect: "Fast blink"
+            else:
+              - light.turn_on:
+                  id: status_led
+                  effect: none
 
 # Enables the debug sensor/text_sensor platforms below (CPU frequency,
 # reset reason) - required, no options.
@@ -96,11 +124,25 @@ wiener_netze:
   security_key: "0123456789abcdef0123456789abcdef"
   read_timeout: 10s
   on_telegram:
-    # One telegram per wake-up is enough: wait until Home Assistant is
-    # connected so the values are delivered, then go back to sleep.
+    # A telegram is proof of life: cancel any alarm pattern first, then
+    # wait until Home Assistant is connected so the values are delivered
+    # (solid on the LED if it is not), and go back to sleep.
+    - light.turn_on:
+        id: status_led
+        effect: "Slow blink"
     - wait_until:
         condition: api.connected
         timeout: 20s
+    - if:
+        condition: api.connected
+        then:
+          - light.turn_off:
+              id: status_led
+        else:
+          - light.turn_on:
+              id: status_led
+              effect: none
+          - delay: 10s
     - delay: 1s
     - deep_sleep.enter: deep_sleep_1
 
@@ -112,6 +154,43 @@ deep_sleep:
   # The meter pushes about once per second; 1min..10min are sensible,
   # longer saves battery.
   sleep_duration: 5min
+
+output:
+  # Built-in S2 Mini LED (LED1, 0603 blue, GPIO15 via R5 2 kOhm,
+  # active-high). The ~0.2 mA it draws while awake is negligible for the
+  # battery; in deep sleep the GPIO is released and it costs nothing.
+  - platform: gpio
+    id: status_led_out
+    pin: GPIO15
+
+light:
+  # Status indicator while awake (see the on_boot / on_telegram hooks):
+  #   slow blink ~1 Hz  = alive
+  #   fast blink  5 Hz  = Wi-Fi up, no meter data
+  #   solid on          = network failure (Wi-Fi down or HA unreachable)
+  # Strobe = hard on/off square wave. The light entity is also a manual
+  # test hook in Home Assistant.
+  - platform: binary
+    name: "Status LED"
+    id: status_led
+    output: status_led_out
+    effects:
+      - strobe:
+          name: "Slow blink"
+          id: effect_slow
+          colors:
+            - state: true
+              duration: 150ms
+            - state: false
+              duration: 850ms
+      - strobe:
+          name: "Fast blink"
+          id: effect_fast
+          colors:
+            - state: true
+              duration: 100ms
+            - state: false
+              duration: 100ms
 
 sensor:
   - platform: wiener_netze
@@ -141,6 +220,7 @@ sensor:
   - platform: wiener_netze
     type: telegram_count
     name: "Telegrams decoded"
+    id: telegram_count
   # Diagnostics (added 2026-11-15): what the last reset was, how warm the
   # hallway/cupboard is, and the WiFi link at the meter.
   - platform: internal_temperature
