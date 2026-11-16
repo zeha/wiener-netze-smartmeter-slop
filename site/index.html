@@ -87,7 +87,7 @@
     <li><strong>The meter does the pushing.</strong> M1 meters send a complete consumption telegram through their infrared customer interface roughly every second — no query, no wired bus, no installer access needed.</li>
     <li><strong>An IR read head</strong> (a Hichi IR TTL v1.1, a 3.3 V TTL phototransistor module) sits in front of the meter's IR window, about 5–10 cm away, cable pointing downwards, and turns the light into a UART signal (9600 baud, 8N1).</li>
     <li><strong>A Wemos S2 Mini (ESP32-S2)</strong> runs a custom <code>wiener_netze</code> ESPHome component: it waits for the 105-byte frame, verifies the CRC-16/X-25, decrypts the payload with the meter's security key, and publishes the values to Home Assistant over the native ESPHome API.</li>
-    <li><strong>Battery + deep sleep.</strong> There is no power outlet at the meter. The board wakes every few minutes, reads one telegram, sends it, and sleeps again. The pack is charged from the power dock's USB-C input (below); a battery divider on the dock is designed in but not enabled in the current build.</li>
+    <li><strong>Battery + deep sleep.</strong> There is no power outlet at the meter. The board wakes every few minutes, reads one telegram, sends it, and sleeps again. The bare board has no battery charger, so the power dock (below) is the plan for topping up the pack from USB-C; its battery divider is designed in but not enabled in the current build.</li>
   </ul>
 
   <h2>The protocol, in one table</h2>
@@ -127,7 +127,7 @@
     <li><strong>Switches the IR head's supply.</strong> A P-MOS high-side gate is driven by <code>GPIO5</code> (low = on, off by default): while the board is awake the head is powered, in deep sleep it is fully off instead of idling on 3V3. The dock carries the gate; the current reader build does not drive GPIO5, so the head stays powered.</li>
     <li><strong>Carries the battery voltage divider</strong> (1 MΩ / 1 MΩ to <code>GPIO3</code>) on the board, so no jumper wires on the battery side.</li>
   </ul>
-  <p>The S2 Mini daisy-chains to the dock's 6-pin header with short jumper wires: <code>5V/VBUS</code>, <code>GND</code>, <code>IO3</code>, <code>3V3</code>, <code>IO5</code>, <code>IO11</code>; the head plugs into its 4-pin connector (switched 3V3, GND, data, and the green wire to <code>GPIO12</code>). The dock is built and deployed (JLCPCB, v2): the S2 Mini and IR head sit on it, and the pack is charged from its USB-C input.</p>
+  <p>The S2 Mini daisy-chains to the dock's 6-pin header with short jumper wires: <code>5V/VBUS</code>, <code>GND</code>, <code>IO3</code>, <code>3V3</code>, <code>IO5</code>, <code>IO11</code>; the head plugs into its 4-pin connector (switched 3V3, GND, data, and the green wire to <code>GPIO12</code>). The v2 layout is complete and production exports are ready; the dock is not yet ordered or on hand, so the reader currently runs on the bare board.</p>
 
   <h2>Battery life</h2>
   <p>Per wake-up (boot + Wi-Fi ≈ 2 s, one telegram ≈ 1.5 s, publish ≈ 0.5 s) the board uses roughly 0.1–0.23 mAh. The meter pushes ~1×/second, so every wake-up always has a telegram ready — the wake interval is the only knob.</p>
@@ -144,7 +144,7 @@
     <tr><th>Step</th><th>State</th></tr>
     <tr><td>Research (interface, protocol, reference firmware)</td><td class="ok">done</td></tr>
     <tr><td><code>wiener_netze</code> ESPHome component + device config</td><td class="ok">built, compiled and deployed on the reader</td></tr>
-    <tr><td>Power dock (TP4056 charger, USB-C input, P-MOS switch for the head supply, on-board divider) — KiCad design + PCB (JLCPCB)</td><td class="ok">v2 layout done, ordered and assembled, deployed</td></tr>
+    <tr><td>Power dock (TP4056 charger, USB-C input, P-MOS switch for the head supply, on-board divider) — KiCad design + PCB (JLCPCB)</td><td class="wait">v2 layout done, production exports ready; not yet ordered or assembled</td></tr>
     <tr><td>Field test at the meter (IR alignment, key, real telegram capture)</td><td class="ok">done — reader deployed and decoding live telegrams</td></tr>
     <tr><td>Repo on GitHub (<a href="https://github.com/zeha/wiener-netze-smartmeter-slop">zeha/wiener-netze-smartmeter-slop</a>), HA integration via <code>external_components</code></td><td class="ok">repo public, reader flashed and deployed</td></tr>
     <tr><td>Long-term battery measurement</td><td class="wait">running in the wild</td></tr>
