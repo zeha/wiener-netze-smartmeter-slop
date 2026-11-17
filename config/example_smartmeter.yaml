@@ -64,11 +64,13 @@ external_components:
   # commit (or @main) once the change you need has landed.
   - source: github://zeha/wiener-netze-smartmeter-slop@b03548d024f8bb8c4497457264e9bb4d39ad721e
     components: [wiener_netze]
-  # Local development: the component lives in ../components of this repo.
-  # - source:
-  #     type: local
-  #     path: ../components
-  #   components: [wiener_netze]
+  # Local development: components live in ../components of this repo.
+  # sleep_guard only exists locally until the owner pushes it and bumps
+  # the github pin above (then move it into the github component list).
+  - source:
+      type: local
+      path: ../components
+    components: [sleep_guard]
 
 esp32:
   variant: esp32s2
@@ -147,6 +149,18 @@ deep_sleep:
   run_duration: 40s
   # The meter pushes about once per second; 1min..10min are sensible,
   # longer saves battery.
+  sleep_duration: 5min
+
+# Safety net for the 2026-11-16 deep-sleep hang: if sleep entry never
+# completes, deep_sleep's one-shot wake timer is consumed and the device
+# stays awake forever with the pipeline dead. sleep_guard (a) restarts the
+# device if the main loop stalls for 2min (the loop task never trips the
+# TWDT on this chip), and (b) forces a sleep entry if the device is still
+# awake run + sleep + 10min after boot. run_duration / sleep_duration must
+# mirror the deep_sleep values above.
+sleep_guard:
+  deep_sleep_id: deep_sleep_1
+  run_duration: 40s
   sleep_duration: 5min
 
 output:
