@@ -12,24 +12,30 @@ namespace esphome::sleep_guard {
 
 /// Safety net for deep-sleep entry failure.
 ///
-/// deep_sleep arms a one-shot RTC wake timer at boot and begin_sleep()
-/// consumes it. If sleep entry never completes - the main task blocks in
-/// teardown, or the attempt is skipped - the timer is not re-armed and the
-/// device stays awake forever with the pipeline dead: the 2026-11-16
-/// 10:44-13:41 outage (see projects/wiener-netze-smartmeter/decisions/
-/// deep-sleep-hang-root-cause-wake-timer-consumed.md in the vault).
+/// deep_sleep arms a one-shot RTC wake timer at boot; if an entry fails,
+/// begin_sleep() falls through to schedule_sleep_(), which re-arms the
+/// timer and retries the entry every run_duration. The main loop keeps
+/// running while the retries fail, so the device can stay up with the
+/// pipeline dead for hours until one attempt happens to succeed: the
+/// 2026-11-18 11:44-13:44 outage, self-recovered after ~2 h (see
+/// projects/wiener-netze-smartmeter/decisions/
+/// deep-sleep-hang-root-cause-wake-timer-consumed.md in the vault, revised
+/// 2026-11-18).
 ///
-/// Two independent guards:
+/// Three independent guards:
 ///
 /// 1. A separate FreeRTOS watchdog task: restarts the device if the main
 ///    loop has not run for stall_timeout. Needed because the loop task is
 ///    not registered with the task WDT and on the ESP32-S2 the idle task on
 ///    the other core keeps the TWDT fed - a blocked main task never trips
-///    a hardware reset (the device stayed powered for three hours on
-///    2026-11-16).
+///    a hardware reset.
 /// 2. If the device is still awake after run_duration + sleep_duration +
 ///    awake_margin since boot, force a sleep entry via
 ///    begin_sleep(manual=true). If that wedges, guard 1 restarts.
+/// 3. If the device is still awake after max_uptime since boot, restart
+///    unconditionally. A healthy boot never exceeds the run duration, so
+///    this caps the retry-loop mode where guards 1 and 2 are blind (main
+///    loop running, sleep entry keeps failing).
 class SleepGuard : public Component {
  public:
   void set_deep_sleep_component(deep_sleep::DeepSleepComponent *component) {
@@ -39,6 +45,7 @@ class SleepGuard : public Component {
   void set_sleep_duration(uint32_t ms) { this->sleep_duration_ms_ = ms; }
   void set_awake_margin(uint32_t ms) { this->awake_margin_ms_ = ms; }
   void set_stall_timeout(uint32_t ms) { this->stall_timeout_ms_ = ms; }
+  void set_max_uptime(uint32_t ms) { this->max_uptime_ms_ = ms; }
 
   float get_setup_priority() const override { return setup_priority::DATA; }
   void setup() override;
@@ -54,6 +61,7 @@ class SleepGuard : public Component {
   uint32_t sleep_duration_ms_{300000};
   uint32_t awake_margin_ms_{600000};
   uint32_t stall_timeout_ms_{120000};
+  uint32_t max_uptime_ms_{600000};
   volatile uint32_t last_loop_ms_{0};
 };
 

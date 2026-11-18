@@ -151,17 +151,21 @@ deep_sleep:
   # longer saves battery.
   sleep_duration: 5min
 
-# Safety net for the 2026-11-16 deep-sleep hang: if sleep entry never
-# completes, deep_sleep's one-shot wake timer is consumed and the device
-# stays awake forever with the pipeline dead. sleep_guard (a) restarts the
-# device if the main loop stalls for 2min (the loop task never trips the
-# TWDT on this chip), and (b) forces a sleep entry if the device is still
-# awake run + sleep + 10min after boot. run_duration / sleep_duration must
-# mirror the deep_sleep values above.
+# Safety net for the deep-sleep entry failure (2026-11-16 hang; 2026-11-18
+# hang self-recovered after ~2 h): if an entry fails, deep_sleep re-arms
+# the wake timer and retries every run_duration while the main loop keeps
+# running - the device can stay up with the pipeline dead for hours.
+# sleep_guard (a) restarts the device if the main loop stalls for 2min
+# (the loop task never trips the TWDT on this chip), (b) forces a sleep
+# entry if still awake run + sleep + 10min after boot, and (c) restarts
+# unconditionally if still awake max_uptime after boot - the guard for the
+# retry-loop mode where (a) and (b) are blind. run_duration /
+# sleep_duration must mirror the deep_sleep values above.
 sleep_guard:
   deep_sleep_id: deep_sleep_1
   run_duration: 40s
   sleep_duration: 5min
+  max_uptime: 10min
 
 output:
   # Built-in S2 Mini LED (LED1, 0603 blue, GPIO15 via R5 2 kOhm,

@@ -13,6 +13,7 @@ SleepGuard = sleep_guard_ns.class_("SleepGuard", cg.Component)
 CONF_DEEP_SLEEP_ID = "deep_sleep_id"
 CONF_AWAKE_MARGIN = "awake_margin"
 CONF_STALL_TIMEOUT = "stall_timeout"
+CONF_MAX_UPTIME = "max_uptime"
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
@@ -29,6 +30,11 @@ CONFIG_SCHEMA = cv.All(
             # Restart the device if the main loop stops running for this long
             # (main task stuck in the deep-sleep teardown).
             cv.Optional(CONF_STALL_TIMEOUT, default="2min"): cv.positive_time_period_milliseconds,
+            # Restart unconditionally if still awake this long after boot.
+            # A healthy boot never exceeds the run duration; this caps the
+            # sleep-entry retry loop (2026-11-18 mode), which the other
+            # guards both miss.
+            cv.Optional(CONF_MAX_UPTIME, default="10min"): cv.positive_time_period_milliseconds,
         }
     ),
     cv.only_on(["esp32"]),
@@ -45,3 +51,4 @@ async def to_code(config):
     cg.add(var.set_sleep_duration(config[CONF_SLEEP_DURATION].total_milliseconds))
     cg.add(var.set_awake_margin(config[CONF_AWAKE_MARGIN].total_milliseconds))
     cg.add(var.set_stall_timeout(config[CONF_STALL_TIMEOUT].total_milliseconds))
+    cg.add(var.set_max_uptime(config[CONF_MAX_UPTIME].total_milliseconds))

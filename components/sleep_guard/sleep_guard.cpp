@@ -58,6 +58,15 @@ void SleepGuard::loop() { this->last_loop_ms_ = millis(); }
 
 void SleepGuard::check_stall_() {
   const uint32_t now = millis();
+  if (this->deep_sleep_component_ != nullptr && now > this->max_uptime_ms_) {
+    ESP_LOGE(TAG,
+             "Still awake %" PRIu32 " ms after boot (limit %" PRIu32
+             " ms) - a healthy boot never exceeds the run duration. Restarting "
+             "for a clean state: the deep-sleep entry is failing or the device "
+             "is stuck in its retry loop.",
+             now, this->max_uptime_ms_);
+    arch_restart();
+  }
   if (now < STALL_GRACE_MS)
     return;
   const uint32_t idle = now - this->last_loop_ms_;
@@ -79,6 +88,7 @@ void SleepGuard::dump_config() {
   ESP_LOGCONFIG(TAG, "  sleep duration: %" PRIu32 " ms", this->sleep_duration_ms_);
   ESP_LOGCONFIG(TAG, "  awake margin: %" PRIu32 " ms", this->awake_margin_ms_);
   ESP_LOGCONFIG(TAG, "  stall timeout: %" PRIu32 " ms", this->stall_timeout_ms_);
+  ESP_LOGCONFIG(TAG, "  max uptime: %" PRIu32 " ms", this->max_uptime_ms_);
 }
 
 }  // namespace esphome::sleep_guard
