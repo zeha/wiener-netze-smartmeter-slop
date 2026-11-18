@@ -25,10 +25,11 @@ namespace esphome::sleep_guard {
 /// Three independent guards:
 ///
 /// 1. A separate FreeRTOS watchdog task: restarts the device if the main
-///    loop has not run for stall_timeout. Needed because the loop task is
-///    not registered with the task WDT and on the ESP32-S2 the idle task on
-///    the other core keeps the TWDT fed - a blocked main task never trips
-///    a hardware reset.
+///    loop has not run for stall_timeout. In this build the loop task is
+///    registered with the task WDT (5 s, panic) and fed on every loop
+///    iteration, which already covers a fully blocked loop - this guard
+///    keeps that protection independent of the TWDT configuration of
+///    future ESPHome/IDF builds.
 /// 2. If the device is still awake after run_duration + sleep_duration +
 ///    awake_margin since boot, force a sleep entry via
 ///    begin_sleep(manual=true). If that wedges, guard 1 restarts.
